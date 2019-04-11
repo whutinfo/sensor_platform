@@ -1,0 +1,7 @@
+在Login的views中   
+request.session["Login_UserId"] = id   #保存session
+uid=request.session.get("Login_UserId")    #读取session   是读取到了
+但是  request.session.session_key  打印是None
+而实际上如果是好的话，此时打印的是一串随机的字符串
+
+所以导致 在其他模块中调用 request.session.get("Login_UserId")   没有值为None

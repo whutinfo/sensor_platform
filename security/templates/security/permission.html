@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href={% static "Themes/EasyUI/default/easyui.css" %} />
+    <link rel="stylesheet" href={% static "Themes/EasyUI/icon.css" %} />
+    <script src={% static "Themes/EasyUI/jquery.min.js"%}></script>
+    <script src={% static "Themes/EasyUI/jquery.easyui.min.js"%}></script>
+    <script src={% static "Themes/Scripts/FunctionJS.js"%} type="text/javascript"></script>
+
+    <link rel="stylesheet href={% static "Themes/mystyle.css"%} "/>
+
+    <script>
+    $(document).ready(function () {
+        LoadData();
+        LoadData2();
+    });
+
+    function LoadData() {
+        var datajson = [];
+        var parm = "action=LoadData";
+        getAjax("indexdata.ashx", parm, function (data) {
+            if (data != "") {
+                datajson = eval("(" + data + ")");
+            }
+        });
+        $("#dg").datagrid({
+            title: '用户表',
+            columns: [[
+                      { field: 'value2', title: '用户名', width: '20%', align: 'center', order: 'desc' },
+                      { field: 'value4', title: '备注', width: '79%', align: 'center' }
+            ]],
+            width: '100%',
+            height: '98%',
+            toolbar: '#tb',
+            showHeader: true,
+            showFooter: true,
+            pagination: true,
+            singleSelect: true,
+            pageSize: 10,
+            pageList: [10, 30, 50],
+            data: datajson.slice(0, 10)
+        });
+
+        var pager = $('#dg').datagrid('getPager');
+        pager.pagination({
+            total: datajson.length,
+            onSelectPage: function (pageNo, pageSize) {
+                var start = (pageNo - 1) * pageSize;
+                var end = start + pageSize;
+                $("#dg").datagrid('loadData', datajson.slice(start, end));
+                pager.pagination('refresh', {
+                    total: datajson.length,
+                    pageNumber: pageNo
+                });
+            }
+        });
+
+
+
+
+    }
+
+    function LoadData2() {
+        var datajson = [];
+        var parm = "action=LoadData2";
+        getAjax("indexdata.ashx", parm, function (data) {
+            if (data != "") {
+                datajson = eval("(" + data + ")");
+            }
+        });
+        $("#dg2").datagrid({
+            title: '角色表',
+            columns: [[
+                      { field: 'value2', title: '角色名', width: '20%', align: 'center', order: 'desc' },
+                      { field: 'value4', title: '备注', width: '79%', align: 'center' }
+            ]],
+            width: '100%',
+            height: '98%',
+            toolbar: '#tb1',
+            showHeader: true,
+            singleSelect: true,
+            showFooter: true,
+            pagination: true,
+            pageSize: 10,
+            pageList: [10, 30, 50],
+            data: datajson.slice(0, 10)
+        });
+
+        var pager = $('#dg2').datagrid('getPager');
+        pager.pagination({
+            total: datajson.length,
+            onSelectPage: function (pageNo, pageSize) {
+                var start = (pageNo - 1) * pageSize;
+                var end = start + pageSize;
+                $("#dg2").datagrid('loadData', datajson.slice(start, end));
+                pager.pagination('refresh', {
+                    total: datajson.length,
+                    pageNumber: pageNo
+                });
+            }
+        });
+
+    }
+
+
+
+    function alertwarn(content) {
+        content = "<p style='text-align:center'>" + content + "</p>";
+
+        $('#dlg_warn').show();
+        $('#dlg_warn').dialog({
+            title: '警告',
+            width: 250,
+            height: 100,
+            onResize: function () {
+                $(this).dialog('center');
+            },
+            shadow: true,
+            content: content
+        });
+    }
+
+
+    function editpremis() {
+        var parm = "action=LoadAccess";
+        var accessjson = [];
+        getAjax("indexdata.ashx", parm, function (data) {
+            if (data != "") {
+                accessjson = eval("(" + data + ")");
+            }
+        })
+
+
+        var selects = $('#dg').datagrid('getSelections');
+
+        if (selects.length == 0) {
+            alertwarn("请选择一个用户");
+        }
+        else {
+
+            var id = selects[0].id;
+            var parm = "action=LoadUserPermis&id=" + id;
+            var datajson = [];
+            getAjax("indexdata.ashx", parm, function (data) {
+                if (data != "") {
+                    datajson = eval("(" + data + ")");
+                }
+            })
+
+            //var editRow = undefined;
+            $("#dlg5_dg").datagrid({
+                data: datajson,
+                columns: [[
+                          { field: 'menu_name', title: '对象名称', width: '45%', align: 'center', order: 'desc', sortable: true },
+                          { field: 'up_str_name', title: '修改权限', width: '45%', align: 'center', editor: { type: 'combobox', options: { multiple: 'true', valueField: 'name', textField: 'name', data: accessjson, panelHeight: 'auto', required: false } } }
+                ]],
+                rownumbers: true
+            });
+
+            $("#dlg5_dg").datagrid({
+                onClickCell: onClickCell,
+                onEndEdit: onEndEdit
+            });
+
+            $('#dlg5').show();
+            $('#dlg5').dialog({
+                title: "修改用户权限",
+                width: 600,
+                height: 400,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons5',
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#dlg5').dialog('center');
+                },
+                onClose: function () {
+                    //LoadData();
+                }
+            })
+
+        }
+
+    }
+
+    var editIndex = undefined;
+    function endEditing() {
+        if (editIndex == undefined) { return true }
+        if ($('#dlg5_dg').datagrid('validateRow', editIndex)) {
+            $('#dlg5_dg').datagrid('endEdit', editIndex);
+            editIndex = undefined;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function onClickCell(index, field) {
+        var rows = $("#dlg5_dg").datagrid('getRows');
+        if (field != "up_str_name") {
+            if (editIndex != index) {
+                if (endEditing()) {
+                    $('#dlg5_dg').datagrid('selectRow', index)
+                            .datagrid('beginEdit', index);
+                    var ed = $('#dlg5_dg').datagrid('getEditor', { index: index, field: field });
+                    if (ed) {
+                        //修改：这种情况下，只有点击Value6才能达到初始选择的效果
+                        //if (field == "value6") {
+                        //    $(ed.target).combobox('setValue', rows[index].id_6);
+                        //    $(ed.target).combobox('setText', rows[index].value6);
+                        //}
+
+                        //无论点击哪个Cell都要有效
+                        var ed2 = $('#dlg5_dg').datagrid('getEditor', { index: index, field: "up_str_name" });
+                        $(ed2.target).combobox('setValue', rows[index].name);
+                        $(ed2.target).combobox('setText', rows[index].name);
+
+                        //不能focus到不编辑的Cell，这样设置value6的选择值无效
+                        ($(ed.target).data('textbox') ? $(ed.target).textbox('textbox') : $(ed.target)).focus();
+
+                        //$(ed2.target).textbox('textbox').focus();
+                    }
+                    editIndex = index;
+                } else {
+                    setTimeout(function () {
+                        $('#dlg5_dg').datagrid('selectRow', editIndex);
+                    }, 0);
+                }
+            }
+        }
+    }
+
+
+    function onEndEdit(index, row) {
+        var ed = $(this).datagrid('getEditor', {
+            index: index,
+            field: 'up_str_name'
+        });
+
+        row.name = $(ed.target).combobox('getValue');
+        row.name = $(ed.target).combobox('getText');
+
+    }
+
+
+    function accept() {
+        if (endEditing()) {
+            $('#dlg5_dg').datagrid('acceptChanges');
+        }
+    }
+
+
+
+
+    //修改用户权限
+    function edit5_save() {
+        accept();
+        var rows = $("#dlg5_dg").datagrid('getRows');
+        var id = rows[0].user_id;
+        var rowsString = JSON.stringify(rows);
+
+        var parm = "action=EditUserPermis&rowsString=" + rowsString + "&id=" +id;
+        var backindex;
+        getAjax("indexdata.ashx", parm, function (data) {
+            backindex = data;
+        })
+        if (backindex != "0") {
+            alert("修改用户权限成功!");
+            $('#dlg5').dialog('close');
+        }
+        else {
+            alert("修改用户权限失败!");
+        }
+    }
+
+    /////////////////////////////角色权限/////////////////////////////
+    function editpremisR() {
+        var parm = "action=LoadAccess";
+        var accessjson = [];
+        getAjax("indexdata.ashx", parm, function (data) {
+            if (data != "") {
+                accessjson = eval("(" + data + ")");
+            }
+        })
+
+        var selects = $('#dg2').datagrid('getSelections');
+        if (selects.length == 0) {
+            alertwarn("请选择一个角色");
+        }
+        else {
+            var id = selects[0].id;
+            var parm = "action=LoadUserPermisR&id=" + id;
+            var datajson = [];
+            getAjax("indexdata.ashx", parm, function (data) {
+                if (data != "") {
+                    datajson = eval("(" + data + ")");
+                }
+            })
+
+            //var editRow = undefined;
+            $("#dlg51_dg").datagrid({
+                data: datajson,
+                columns: [[
+                          //{ field: 'CK', title: '', checkbox: true, width: "5%" },
+                          { field: 'menu_name', title: '对象名称', width: '45%', align: 'center', order: 'desc', sortable: true },
+                          { field: 'rp_str_name', title: '修改权限', width: '45%', align: 'center', editor: { type: 'combobox', options: { multiple: 'true', valueField: 'name', textField: 'name', data: accessjson, panelHeight: 'auto', required: false } } }
+                ]],
+                rownumbers: true
+            })
+
+            $("#dlg51_dg").datagrid({
+                onClickCell: onClickCell1,
+                onEndEdit: onEndEdit1
+            });
+
+            $('#dlg51').show();
+            $('#dlg51').dialog({
+                title: "修改角色权限",
+                width: 600,
+                height: 400,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons51',
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#dlg51').dialog('center');
+                },
+                onClose: function () {
+                    //LoadData();
+                }
+            })
+        }
+    }
+
+    function endEditing1() {
+        if (editIndex == undefined) { return true }
+        if ($('#dlg51_dg').datagrid('validateRow', editIndex)) {
+            $('#dlg51_dg').datagrid('endEdit', editIndex);
+            editIndex = undefined;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    function onClickCell1(index, field) {
+        var rows = $("#dlg51_dg").datagrid('getRows');
+        if (field != "rp_str_name") {
+            if (editIndex != index) {
+                if (endEditing1()) {
+                    $('#dlg51_dg').datagrid('selectRow', index)
+                            .datagrid('beginEdit', index);
+                    var ed = $('#dlg51_dg').datagrid('getEditor', { index: index, field: field });
+                    if (ed) {
+                        //修改：这种情况下，只有点击Value6才能达到初始选择的效果
+                        //if (field == "value6") {
+                        //    $(ed.target).combobox('setValue', rows[index].id_6);
+                        //    $(ed.target).combobox('setText', rows[index].value6);
+                        //}
+
+                        //无论点击哪个Cell都要有效
+                        var ed2 = $('#dlg51_dg').datagrid('getEditor', { index: index, field: "rp_str_name" });
+                        $(ed2.target).combobox('setValue', rows[index].name);
+                        $(ed2.target).combobox('setText', rows[index].name);
+
+                        //不能focus到不编辑的Cell，这样设置value6的选择值无效
+                        ($(ed.target).data('textbox') ? $(ed.target).textbox('textbox') : $(ed.target)).focus();
+
+                        //$(ed2.target).textbox('textbox').focus();
+                    }
+                    editIndex = index;
+                } else {
+                    setTimeout(function () {
+                        $('#dlg51_dg').datagrid('selectRow', editIndex);
+                    }, 0);
+                }
+            }
+        }
+    }
+
+
+    function onEndEdit1(index, row) {
+        var ed = $(this).datagrid('getEditor', {
+            index: index,
+            field: 'rp_str_name'
+        });
+
+        row.name = $(ed.target).combobox('getValue');
+        row.name = $(ed.target).combobox('getText');
+
+    }
+
+
+    function accept1() {
+        if (endEditing1()) {
+            $('#dlg51_dg').datagrid('acceptChanges');
+        }
+    }
+
+
+    function edit51_save() {
+        accept1();
+        var rows = $("#dlg51_dg").datagrid('getRows');
+        var id = rows[0].role_id;
+        var rowsString = JSON.stringify(rows);
+
+        var parm = "action=EditUserPermisR&rowsString=" + rowsString + "&id=" + id;
+        var backindex;
+        getAjax("indexdata.ashx", parm, function (data) {
+            backindex = data;
+        })
+        if (backindex != "0") {
+            alert("修改角色权限成功!");
+            $('#dlg51').dialog('close');
+        }
+        else {
+            alert("修改角色权限失败!");
+        }
+    }
+
+    </script>
+
+
+
+
+</head>
+<body class="easyui-layout" style="width: 100%; height: 100%">
+
+
+   <div style="float: left; padding-top: 10px; padding-left: 10px;width:49.8%; height:99%">
+        <div id="panel1" class="easyui-panel" title="用户权限管理" style="width:98%; height: 98%; padding: 10px 10px 0 10px; background: #fafafa;"
+            data-options="iconCls:'icon-edit',closable:false">
+   <table class="easyui-datagrid"  id="dg">
+	</table>
+
+   <div id="tb" style="padding:5px;height:auto">
+
+
+         <a href="#" id="A2" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-edit'" onclick="editpremis();">编辑用户权限</a>
+
+
+        </div>
+
+</div>
+
+</div>
+
+    <div style="float: left; padding-top: 10px; padding-left: 10px;width:49.8%; height:99%">
+        <div id="Div1" class="easyui-panel" title="角色权限管理" style="width:98%; height: 98%; padding: 10px 10px 0 10px; background: #fafafa;"
+            data-options="iconCls:'icon-edit',closable:false">
+   <table class="easyui-datagrid"  id="dg2">
+	</table>
+
+   <div id="tb1" style="padding:5px;height:auto">
+
+
+         <a href="#" id="A1" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-edit'" onclick="editpremisR();">编辑角色权限</a>
+
+
+        </div>
+
+</div>
+
+</div>
+
+
+    <div id="dlg_warn" style="display: none">
+    </div>
+
+     <div id="dlg5" style="display: none">
+            <table id="dlg5_dg" class="easyui-datagrid">
+            </table>
+        </div>
+
+     <div id="dlg-buttons5" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="edit5_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg5').dialog('close')">取消</a>
+     </div>
+
+
+    <div id="dlg51" style="display: none">
+            <table id="dlg51_dg" class="easyui-datagrid">
+            </table>
+        </div>
+
+     <div id="dlg-buttons51" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="edit51_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg51').dialog('close')">取消</a>
+     </div>
+
+</body>
+</html>
+
+

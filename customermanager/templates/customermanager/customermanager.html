@@ -1,0 +1,338 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+   <link rel="stylesheet" href={% static "Themes/EasyUI/default/easyui.css" %} />
+    <link rel="stylesheet" href={% static "Themes/EasyUI/icon.css" %} />
+    <script src={% static "Themes/EasyUI/jquery.min.js" %}></script>
+    <script src={% static "Themes/EasyUI/jquery.easyui.min.js" %}></script>
+    <script src={% static "Themes/Scripts/FunctionJS.js" %} type="text/javascript"></script>
+</head>
+     <script>
+         $(document).ready(function () {
+             //InitDg1();
+             LoadDg1();//一开始就加载所有
+
+         })
+
+         //////////////////***************客户信息 初始化 + 加载 *************///////////////////////////
+         function InitDg1() {
+             var datajson = [];
+
+             $("#dg1").datagrid({
+                 data: datajson,
+                 title: '客户信息',
+                 columns: [[
+                      { field: 'CK', title: '', checkbox: true, width: "5%" },
+                      { field: 'value1', title: '客户姓名', width: "10%", align: 'center' },
+                      { field: 'value2', title: '客户生日', width: "18%", align: 'center' },
+                      { field: 'value3', title: '客户性别', width: "12%", align: 'center' },
+                      { field: 'value4', title: '客户手机号', width: "10%", align: 'center' },
+                      { field: 'value5', title: '客户卡号', width: "20%", align: 'center' },
+                      { field: 'value6', title: '客户积分', width: "12%", align: 'center' },
+                      { field: 'value7', title: '创建时间', width: "20%", align: 'center' },
+                      { field: 'value8', title: '更新时间', width: "20%", align: 'center' },
+                 ]],
+                 showFooter: true,
+                 pagination: true,
+                 singleSelect: true,
+                 selectOnCheck: true,
+                 onClickRow: function (index, row) {
+                 }
+             })
+         }
+
+         /***********加载本地生产厂商信息数据****************/
+         function LoadDg1() {
+             var datajson = [];
+             var parm = 'action=LoadData';
+             getAjax("/customermanager/", parm, function (backstring) {
+                 if (backstring != "") {
+                     datajson = eval("(" + backstring + ")");
+                 }
+             })
+             $("#dg1").datagrid('loadData', datajson);//加载本地数据，旧的行将被移除
+
+         }
+         /******************加载结束***********************/
+
+
+         /****************新建生产厂商*****************/
+         function ShowDlg1_2() {
+             $('#dlg1_2').show();
+             $('#dlg1_2').dialog({
+                 title: '新增客户',
+                 width: 705,
+                 height: 420,
+                 closed: false,
+                 shadow: true,
+                 onResize: function () {
+                     $(this).dialog('center');
+                 },
+                 onOpen: function () {
+                     $("#dlg1_2_txt_1").textbox('setValue', "");
+                     $("#dlg1_2_txt_2").textbox('setValue', "");
+                     $("#dlg1_2_txt_3").textbox('setValue', "");
+                     $("#dlg1_2_txt_4").combobox('setValue', "");
+                     $("#dlg1_2_txt_5").textbox('setValue', "");
+                     $("#dlg1_2_txt_6").textbox('setValue', "0");
+                 },
+                 onClose: function () {
+                     LoadDg1();
+
+                 },
+                 buttons: '#dlg1_2-buttons1_add',
+
+             });
+         }
+
+
+         //////*******************保存生产厂商信息**************************/
+         function save() {
+
+             var name = $("#dlg1_2_txt_1").textbox('getValue');
+             var carId = $("#dlg1_2_txt_2").textbox('getValue');
+             var phone = $("#dlg1_2_txt_3").textbox('getValue');
+             var sex = $("#dlg1_2_txt_4").combobox('getText');
+             var birthday = $("#dlg1_2_txt_5").textbox('getValue');
+             var point = $("#dlg1_2_txt_6").textbox('getValue');
+
+             var parm = 'action=Save&name=' + name + '&carId=' + carId + '&phone=' + phone + '&sex=' + sex+'&birthday='+birthday+'&point='+point;
+             getAjax("/customermanager/", parm, function (data) {
+                 var backstring = jQuery.parseJSON(data);
+                 if (backstring == "1") {
+                     $('#dlg1_2').dialog('close');
+
+                     LoadDg1();
+
+                 }
+                 else
+                     alert("保存失败");
+             })
+         }
+
+         /*************新建结束*****************/
+
+
+         //////////////////***************Dlg1_1 客户信息查看  *************///////////////////////////
+         function ShowDlg1_1() {
+             var row_slec = $("#dg1").datagrid('getSelected');
+             if (row_slec != null) {
+                 var value_id = row_slec.value0;///索引号
+
+                 $('#dlg1_1').show();
+                 $('#dlg1_1').dialog({
+                     title: '客户信息详情',
+                     width: 700,
+                     height: 400,
+                     closed: false,
+                     shadow: true,
+                     onResize: function () {
+                         $(this).dialog('center');
+                     },
+                     onOpen: function () {
+                         $("#dlg1_1_txt_1").textbox('setValue', row_slec.value1);
+                         $("#dlg1_1_txt_2").textbox('setValue', row_slec.value2);
+                         $("#dlg1_1_txt_3").textbox('setValue', row_slec.value3);
+                         $("#dlg1_1_txt_4").textbox('setValue', row_slec.value4);
+                         $("#dlg1_1_txt_5").textbox('setValue', row_slec.value5);
+                         $("#dlg1_1_txt_6").textbox('setValue', row_slec.value6);
+                         $("#dlg1_1_txt_7").textbox('setValue', row_slec.value7);
+                     },
+                     onClose: function () {
+                         LoadDg1(0);
+                     }
+                 });
+             }
+             else {
+                 alert("勾选要查看的项!");
+             }
+         }
+         //////////////////***************Dlg1_1  工单信息详情查看 结束 *************///////////////////////////
+
+
+
+     </script>
+
+
+
+     <style>
+
+        .datagrid-row-selected
+        {
+            background: rgba(178, 204, 233, 0.50);
+        }
+
+        .body
+        {
+            overflow: hidden;
+        }
+    </style>
+
+
+
+<body class="easyui-layout" style="width: 100%; height: 100%">>
+    <div data-options="region:'center'," style="height: 100%">
+         <div id="toolbar1" style="padding: 2px 5px;">
+
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-reload'" onclick=" LoadDg1();" >刷新</a>
+
+            <a href="javascript:void(0)" class="easyui-linkbutton"  data-options="plain:true,iconCls:'icon-add'" onclick="ShowDlg1_2();">新增客户信息</a>
+
+            <a href="javascript:void(0)" class="easyui-linkbutton"data-options="plain:true,iconCls:'icon-edit'" onclick="edit();">编辑客户信息</a>
+           <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-search'" onclick="ShowDlg1_1();">查看详情</a>
+
+         </div>
+          <table id="dg1" title="客户信息" class="easyui-datagrid" data-options="" style="width: 99%; height: 95%;"
+            showFooter="true" pagination="true" singleSelect="true" selectOnCheck="true">
+              <thead>
+                <tr>
+                    <th data-options="field:'ck',checkbox:true"></th>
+                    {% for i in info_dict %}
+                        {% if i.field != 'value0' %}
+                            <th field={{ i.field }} width={{ i.width }} align={{ i.align }}>{{ i.title }}</th>
+                        {% endif %}
+                    {% endfor %}
+
+                </tr>
+              </thead>
+         </table>
+
+    <!--查看客户详情-->
+    <div id="dlg1_1" style="display: none;">
+        <div style="padding-top: 10px; padding-left: 20px;">
+            <table>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">客户姓名:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_1" style="width: 500px;" readonly="true"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">客户卡号:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_2" style="width: 500px;" readonly="true"/>
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">客户手机号:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_3" style="width: 500px;" readonly="true"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">客户性别:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_4" style="width: 500px;" readonly="true"/>
+                    </td>
+                </tr>
+                <tr>
+                        <td style="padding-top: 4px;">
+                            <span style="padding: 0px 0px 0px 25px;">客户出生日期:</span>
+                        </td>
+                        <td style="padding-top: 4px;">
+                            <input class="easyui-textbox" id="dlg1_1_txt_5" style="width: 500px;" readonly="true" />
+                        </td>
+               </tr>
+               <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">客户积分:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_6"  style="width: 500px;" readonly="true"/>
+                    </td>
+              </tr>
+              <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">创建时间:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_7"  style="width: 500px;" readonly="true"/>
+                    </td>
+              </tr>
+            </table>
+        </div>
+    </div>
+
+    <!--创建生产厂家-->
+    <div id="dlg1_2" style="display: none;">
+        <div style="padding-top: 5px; padding-left: 5px; padding-right: 5px;">
+            <div class="easyui-panel" style="padding-top: 4px; padding-left: 20px; width: 680px; height: 400px;">
+                <table>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">客户姓名:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_1" style="width: 500px;" />
+                    </td>
+                    </tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">客户卡号:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_2" style="width: 500px;" />
+                    </td>
+                    </tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">客户手机号:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_3" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">客户性别:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <select class="easyui-combobox" id="dlg1_2_txt_4" data-options=" valueField: 'id',textField: 'text',panelHeight:'auto'" style="width: 500px;" >
+                            <option value="value1" selected="selected">男</option>
+                            <option value="value2">女</option>
+                        </select>
+                    </td>
+                    </tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                         <span style="padding: 0px 0px 0px 25px;">客户出生日期:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                         <input class="easyui-datebox" id="dlg1_2_txt_5" style="width: 500px;" />
+                    </td>
+                    </tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">客户积分:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_6"  style="width: 500px;" readonly="true"/>
+                    </td>
+                    </tr>
+
+              </table>
+            </div>
+            <div id="dlg1_2-buttons1_add" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg1_2').dialog('close')">取消</a>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+
+</html>

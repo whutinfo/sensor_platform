@@ -1,0 +1,216 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <title>系统通用平台</title>
+
+    <link rel="stylesheet" href={% static "Themes/EasyUI/default/easyui.css" %} />
+    <link rel="stylesheet" href={% static "Themes/EasyUI/icon.css" %} />
+    <script src={% static "Themes/EasyUI/jquery.min.js"%}></script>
+    <script src={% static "Themes/EasyUI/jquery.easyui.min.js"%}></script>
+    <script src={% static "Themes/Scripts/FunctionJS.js"%} type="text/javascript"></script>
+
+    <script src={% static "MainIndex.js"%} type="text/javascript"></script>
+    <script>
+
+        $(document).ready(function (){
+            GetAccordionMenu();
+            LoadSY();
+        })
+
+        function LoadSY() {
+            var parm = "action=Loadsy" ;
+            getAjax("/mainIndex/", parm, function (data) {
+                document.getElementById('Main').src = data;
+                //HomeIndexNew.aspx
+            })
+        }
+
+        function FAddTabMenu(tabid, url, name, img, Isclose, IsReplace) {
+            AddTabMenu(tabid, url, name, img, Isclose, IsReplace);
+
+        }
+
+        /////////////// 手风琴菜单 （左侧分级菜单内容）///////////////
+        var AccordionMenuJson = "";
+        function GetAccordionMenu() {
+            var index = 0;
+            var html = "";
+            getAjax("/mainIndex/", "action=LoadFirstMenuByPermis", function (data) {
+                AccordionMenuJson = jQuery.parseJSON(data);
+                $.each(AccordionMenuJson, function (i) {
+                    if (AccordionMenuJson[i].menu_node.length == 4) {
+                        var strs = new Array();
+                        strs = AccordionMenuJson[i].menu_img.split(".");
+                        var icon = "icon-" + strs[0];
+                        //为第一级菜单前添加图标
+                        var treeid = "tree_" + AccordionMenuJson[i].menu_id;
+                        var content = "<ul id=\"" + treeid + "\"  class=\"easyui-tree\"  style=\"padding:5px 0 0 10px;\">";
+
+                        /****获取子菜单****/
+                        var submenjson = [];
+                        submenjson = GetSubmenu(AccordionMenuJson[i].menu_node);
+                        for (var j = 0; j < submenjson.length; j++) {
+                            content += "<li id=\"" + submenjson[j].menu_id + "\" style=\"padding: 2px 0 0 0;\" data-options='attributes:" + JSON.stringify(submenjson[j]) + "'> <span>" + submenjson[j].menu_name + "</span></li>";
+                        }
+                        content += "</ul>";
+                        /*****第一级菜单*****/
+                        if (index == 0) {
+                            $("#accordion").accordion('add', {
+                                title: AccordionMenuJson[i].menu_name,
+                                content: content,
+                                iconCls: icon,
+                                selected: true,//展开面板
+
+                            })
+                        }
+                        else {
+                            $("#accordion").accordion('add', {
+                                title: AccordionMenuJson[i].menu_name,
+                                content: content,
+                                iconCls: icon,
+                                selected: false,
+
+                            })
+                        }
+
+                        /**********添加所有菜单树的选项卡***********/
+                        $("#" + treeid).tree({
+                            onClick: function (node) {
+                               // JudgeOverTime();
+                                //判断页面是否有，有则不弹出，否则弹出
+
+                                /************此处才真正添加选项卡****************/
+                                AddTabMenu(node.attributes.menu_id, node.attributes.menu_url, node.attributes.menu_name, node.attributes.menu_img, true);
+
+
+                            }
+                        })
+                        index = 1;
+
+                    }
+                });
+            })
+        }
+
+        //子菜单
+        function GetSubmenu(menu_node) {
+            var json = [];
+            var parm = "action=LoadSecondMenu&ParentNode=" + menu_node;
+            getAjax("/mainIndex/", parm, function (data) {
+                json = jQuery.parseJSON(data);
+            })
+            return json;
+
+        }
+
+        //点击菜单时 判断登录是否超时
+        function JudgeOverTime() {
+            var parm = "action=JudgeOverTime";
+            var isovertime = 0;
+            getAjax("/mainIndex/", parm, function (data) {
+                if (data == "1") {
+                    isovertime = 1;
+                }
+            })
+            if (isovertime == 1) {
+                window.location.href = "/login/";
+            }
+        }
+
+        //输入你希望根据页面高度自动调整高度的iframe的名称的列表
+        //用逗号把每个iframe的ID分隔. 例如: ["myframe1", "myframe2"]，可以只有一个窗体，则不用逗号。
+        //定义iframe的ID
+        var iframeids = ["Main", "video1", "accordion", "text", "Highcharts"];
+        //如果用户的浏览器不支持iframe是否将iframe隐藏 yes 表示隐藏，no表示不隐藏
+        var iframehide = "yes";
+        function dyniframesize() {
+            var dyniframe = new Array()
+            for (i = 0; i < iframeids.length; i++) {
+                if (document.getElementById) {
+                    //自动调整iframe高度
+                    dyniframe[dyniframe.length] = document.getElementById(iframeids[i]);
+                    if (dyniframe[i] && !window.opera) {
+                        dyniframe[i].style.display = "block";
+                        if (dyniframe[i].contentDocument && dyniframe[i].contentDocument.body.offsetHeight) //如果用户的浏览器是NetScape
+                            dyniframe[i].height = dyniframe[i].contentDocument.body.offsetHeight;
+                        else if (dyniframe[i].Document && dyniframe[i].Document.body.scrollHeight) //如果用户的浏览器是IE
+                            dyniframe[i].height = dyniframe[i].Document.body.scrollHeight;
+                    }
+                }
+                //根据设定的参数来处理不支持iframe的浏览器的显示问题
+                if ((document.all || document.getElementById) && iframehide == "no") {
+                    var tempobj = document.all ? document.all[iframeids[i]] : document.getElementById(iframeids[i]);
+                    tempobj.style.display = "block";
+                }
+            }
+        }
+        if (window.addEventListener)
+            window.addEventListener("load", dyniframesize, false);
+        else if (window.attachEvent)
+            window.attachEvent("onload", dyniframesize);
+        else
+            window.onload = dyniframesize;
+
+    </script>
+
+    <style>
+        .tree li
+        {
+            padding: 2px 0 0 0;
+        }
+
+        .panel-with-icon
+        {
+            padding-left: 22px;
+        }
+        .tabs-panels
+        {
+            width:100%;
+            height:100%;
+        }
+
+
+
+    </style>
+</head>
+<body class="easyui-layout" style="width:100%;height:100%">
+    <div data-options="region:'north',border:false" style="height: 65px; background: rgb(87,121,238);">
+        <div style="height: 5px; float: right;">
+            <a href="/mainIndex/" style="margin-right: 10px;" class="easyui-linkbutton" data-options="iconCls:'icon-large-shapes',size:'large',iconAlign:'top'">返回主页</a>
+            <a href="#" class="easyui-linkbutton" style="margin-right: 10px;" data-options="iconCls:'icon-large-clipart',size:'large',iconAlign:'top'" onclick="openwindow();">修改密码</a>
+            <a href="/login/" style="margin-right: 10px;" class="easyui-linkbutton" data-options="iconCls:'icon-large-smartart',size:'large',iconAlign:'top'">退出登录</a>
+         </div>
+         <img src="/static/images/title2.png" width="600px" height="60px" style="background-repeat:no-repeat;background-size:contain"/>
+    </div>
+
+    <div data-options="region:'west',split:true,title:'导航菜单'" style="width: 180px; padding: 1px 2px 2px 2px;">
+        <div id="accordion" class="easyui-accordion" style="width: 100%; height: 100%;">
+
+        </div>
+    </div>
+
+    <div data-options="region:'east',split:true,collapsed:true,title:'公告'" style="width: 200px; padding: 10px;">
+    </div>
+
+    <div data-options="region:'center',title:''">
+
+        <div id="tt_main" class="easyui-tabs" style="width: 100%; height:100%;">
+            <div title="首页">
+
+                <iframe id="Main" scrolling="auto" frameborder="0" src="" style="width: 100%; height: 100%;"></iframe>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div data-options="region:'south' ,split:false,title:''" style="height:20px;">
+
+
+    </div>
+</body>
+</html>

@@ -1,0 +1,371 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<head lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href={% static "Themes/EasyUI/default/easyui.css" %} />
+    <link rel="stylesheet" href={% static "Themes/EasyUI/icon.css" %} />
+    <script src={% static "Themes/EasyUI/jquery.min.js"%}></script>
+    <script src={% static "Themes/EasyUI/jquery.easyui.min.js"%}></script>
+    <script src={% static "Themes/Scripts/FunctionJS.js"%} type="text/javascript"></script></head>
+
+    <script>
+     $(document).ready(function () {
+         InitDg1();
+         LoadDg1(0);//一开始就加载所有
+         //   LoadDataByType();//给下拉菜单框绑定事件，获取类型
+     })
+
+     //////////////////***************商品信息 初始化 + 加载 *************///////////////////////////
+     function InitDg1() {
+         var datajson = [];
+
+         $("#dg1").datagrid({
+             data: datajson,
+             title: '商品信息',
+             columns: [[
+                  { field: 'CK', title: '', checkbox: true, width: "5%" },
+                  { field: 'value1', title: '商品条形码', width: "8%", align: 'center' },
+                  { field: 'value2', title: '商品名称', width: "12%", align: 'center' },
+                  { field: 'value3', title: '商品类型', width: "12%", align: 'center' },
+                  { field: 'value4', title: '库存量', width: "5%", align: 'center' },
+                  { field: 'value5', title: '进货量', width: "5%", align: 'center' },
+                  { field: 'value6', title: '销售量', width: "5%", align: 'center' },//对于同一个条形码进货多次，只改变了销售量，没有改变售价
+                  { field: 'value7', title: '成本', width: "12%", align: 'center' },
+                  { field: 'value8', title: '交易额', width: "12%", align: 'center' },
+                  { field: 'value9', title: '保质期限', width: "12%", align: 'center' },
+                  { field: 'value10', title: '生产厂家', width: "12%", align: 'center' },
+                  { field: 'value11', title: '供货商', width: "12%", align: 'center' },
+                  { field: 'value12', title: '入库时间', width: "12%", align: 'center', sortable: true, order: 'desc' },
+                  { field: 'value13', title: '出库时间', width: "12%", align: 'center' },
+             ]],
+             showFooter: true,
+             pagination: true,
+             singleSelect: true,
+             selectOnCheck: true,
+             onClickRow: function (index, row) {
+                 //  LoadDg2(row.value_id);
+             }
+         })
+     }
+
+
+     /***********加载本地入库信息数据****************/
+     function LoadDg1() {
+         var datajson = [];
+         var parm = 'action=LoadData';
+         getAjax("/commodity/", parm, function (backstring) {
+             if (backstring != "") {
+                 datajson = eval("(" + backstring + ")");
+             }
+         })
+         $("#dg1").datagrid('loadData', datajson);//加载本地数据，旧的行将被移除
+
+     }
+     /******************加载结束***********************/
+
+
+     //////////////////***************Dlg1_1  工单信息详情查看  *************///////////////////////////
+     function ShowDlg1_1() {
+         var row_slec = $("#dg1").datagrid('getSelected');
+         if (row_slec != null) {
+             var value_id = row_slec.value_id;///索引号
+
+             $('#dlg1_1').show();
+             $('#dlg1_1').dialog({
+                 title: '商品详情',
+                 width: 700,
+                 height: 400,
+                 closed: false,
+                 shadow: true,
+                 onResize: function () {
+                     $(this).dialog('center');
+                 },
+                 onOpen: function () {
+                     $("#dlg1_1_txt_1").textbox('setValue', row_slec.value1);
+                     $("#dlg1_1_txt_2").textbox('setValue', row_slec.value2);
+                     $("#dlg1_1_txt_3").textbox('setValue', row_slec.value3);
+                     $("#dlg1_1_txt_4").textbox('setValue', row_slec.value4);
+                     $("#dlg1_1_txt_5").textbox('setValue', row_slec.value5);
+                     $("#dlg1_1_txt_6").textbox('setValue', row_slec.value6);
+                     $("#dlg1_1_txt_7").textbox('setValue', row_slec.value7);
+                     $("#dlg1_1_txt_8").textbox('setValue', row_slec.value8);
+                     $("#dlg1_1_txt_9").textbox('setValue', row_slec.value9);
+                     $("#dlg1_1_txt_10").textbox('setValue', row_slec.value10);
+                     $("#dlg1_1_txt_11").textbox('setValue', row_slec.value11);
+                     $("#dlg1_1_txt_12").textbox('setValue', row_slec.value12);
+                     $("#dlg1_1_txt_13").textbox('setValue', row_slec.value13);
+                 },
+                 onClose: function () {
+                     LoadDg1(0);
+                 }
+             });
+         }
+         else {
+             alert("勾选要查看的项!");
+         }
+     }
+     //////////////////***************Dlg1_1  工单信息详情查看 结束 *************///////////////////////////
+
+       </script>
+
+       <style>
+
+        .datagrid-row-selected
+        {
+            background: rgba(178, 204, 233, 0.50);
+        }
+
+        .body
+        {
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body class="easyui-layout" style="width: 100%; height: 100%">>
+    <div data-options="region:'center'," style="height: 100%">
+         <div id="toolbar1" style="padding: 2px 5px;">
+
+           <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-reload'" onclick="LoadDg1();" >刷新</a>
+
+           <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-search'" onclick="ShowDlg1_1();">查看详情</a>
+
+         </div>
+         <table id="dg1" class="easyui-datagrid" style="width: 99%; height: 95%">
+         </table>
+
+    <!--查看入库详情-->
+    <div id="dlg1_1" style="display: none;">
+        <div style="padding-top: 10px; padding-left: 20px;">
+            <table>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">商品条形码:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_1" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">商品名称:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_2" style="width: 500px;" readonly="true"  >
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">商品类型:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_3" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">库存量:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_4" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">进货量:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_5" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">销售量:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_6" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">成本:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_7" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">售价:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_8" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">保质期限:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_9" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">生产厂家:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_10" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">供货商:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_11" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">入库时间:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_12" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">出库时间:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_13" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!--创建入库单-->
+    <div id="dlg1_2" style="display: none;">
+        <div style="padding-top: 5px; padding-left: 5px; padding-right: 5px;">
+            <div class="easyui-panel" style="padding-top: 4px; padding-left: 20px; width: 680px; height: 400px;">
+                <table>
+                    <tr>
+                        <td style="padding-top: 4px;">
+                            <span style="padding: 0px 0px 0px 25px;">商品条形码:</span>
+                        </td>
+                        <td style="padding-top: 4px;">
+                            <input class="easyui-combobox" id="dlg1_2_txt_1" style="width: 500px"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 4px;">
+                            <span style="padding: 0px 0px 0px 25px;">商品名称:</span>
+                        </td>
+                        <td style="padding-top: 4px;">
+                            <input class="easyui-textbox" id="dlg1_2_txt_2" style="width: 500px;" />
+                        </td>
+                    </tr>
+                        <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">商品类型:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_3" style="width: 500px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">库存量:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_4" style="width: 500px;" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">进货量:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_5" style="width: 500px;" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">销售量:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_6" style="width: 500px;">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">成本:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_7" style="width: 500px;" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">售价:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_8" style="width: 500px;" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">保质期限:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_9" style="width: 500px;" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">生产厂家:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_10" style="width: 500px;" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">供货商:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_11" style="width: 500px;" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">入库时间:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_12" style="width: 500px;" >
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">出库时间:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_13" style="width: 500px;" >
+                    </td>
+                </tr>
+                </table>
+            </div>
+            <div id="dlg1_2-buttons1_add" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg1_2').dialog('close')">取消</a>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

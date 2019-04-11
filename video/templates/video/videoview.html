@@ -1,0 +1,297 @@
+{% load staticfiles %}
+<!doctype html>
+<html>
+<head>
+    <title>123</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+    <meta http-equiv="Expires" content="0" />
+    <link rel="stylesheet" href={% static "Themes/EasyUI/default/easyui.css" %} />
+    <link rel="stylesheet" href={% static "Themes/EasyUI/icon.css" %} />
+    <!--script src=></script-->
+    <script src={% static "jquery-1.7.1.min.js"%}></script>
+    <script src={% static "Themes/EasyUI/jquery.easyui.min.js"%}></script>
+    <script src={% static "Themes/Scripts/FunctionJS.js"%} type="text/javascript"></script>
+
+
+    <script>
+        //document.write("<link type='text/css' href='/static/demo.css?version=" + new Date().getTime() + "' rel='stylesheet' />");
+        $(function () {
+            clicktime = 0;
+            HKversionsetup();
+            LoadTree();
+        });
+        function LoadTree() {
+            var treejson = [];
+            var parm = "action=LoadTree";
+            getAjax("/videoview/", parm, function (data) {
+                treejson = jQuery.parseJSON(data);
+            })
+            $("#tre").tree({
+                data: treejson,
+                onlyLeafCheck: true,
+                checkbox: false,
+                onClick: function (node) {
+                    if( node.nature_id === 2) {
+                        LoadData(node.trueid);
+                        if (clicktime > 1){
+                            clickLogout()
+                        }
+                        clickLogin();
+                        clicktime= clicktime+1;
+                        clickStartRealPlay();
+                    }
+                    var device_id = node.id;
+                    //LoadData(device_id);
+                }
+            })
+        }
+            function LoadData(id) {
+                var datajson;
+                var parm = "action=LoadData&device_id=" + id;
+                getAjax("/videoview/", parm, function (data) {
+                    datajson = jQuery.parseJSON(data);
+                })
+                Def_IP_AD =datajson[0].value2;
+                Def_IP_PORT =datajson[0].value3;
+                Def_User_name= datajson[0].value4;
+                Def_Pwd= datajson[0].value5;
+                Def_Optional_deviceport= datajson[0].value8;
+                Def_Optional_rtspport=datajson[0].value6;
+                Def_streamtype = datajson[0].value7;
+            }
+    </script>
+
+
+
+</head>
+
+<body class="easyui-layout" style="width: 100%; height: 100%">
+
+<div data-options="region:'west',split:true,title:'设备树'" style="width: 180px; padding: 10px;">
+    <!--      <table id="table1">
+                <tr>
+                    <td style="padding: 6px 3px 0px 3px">
+                        <a href="#" id="A2" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-reload'" onclick=";">刷新</a>
+                    </td>
+                </tr>
+            -->
+    <!--    <ul class="easyui-tree" data-options="method:'action=LoadData',data: [{text: 'Item1',state: 'closed',children: [{text: 'Item11'},{text: 'Item12'}]},{text: 'Item2'}]"  >
+        </ul>-->
+        <ul class="easyui-tree"  id="tre"></ul>
+            <!--  </table>-->
+    </div>
+
+<div data-options="region:'center'" style="padding:10px">
+    <fieldset class="camera">
+    <div id="divPlugin" class="plugin"></div>
+          </fieldset>
+    <fieldset class="login">
+        <legend>登录</legend>
+        <table cellpadding="0" cellspacing="3" border="0">
+  <!--<tr>
+               <td class="tt">IP地址</td>
+                <td><input id="loginip" type="text" class="txt" value="192.168.0.64" /></td>
+              <td class="tt">端口号</td>
+                <td><input id="port" type="text" class="txt" value="80" /></td>
+            </tr>
+            <tr>
+                <td class="tt">用户名</td>
+                <td><input id="username" type="text" class="txt" value="admin" /></td>
+                <td class="tt">密码</td>
+                <td><input id="password" type="password" class="txt" value="hbdq123456" /></td>
+            </tr>
+            <tr>
+                <td class="tt">设备端口</td>
+                <td colspan="2"><input id="deviceport" type="text" class="txt" />（可选参数）</td>
+                <td>窗口分割数&nbsp;-->
+
+                    <select class="sel2" onchange="changeWndNum(this.value);">
+                        <option value="1">1x1</option>
+                        <option value="2" selected>2x2</option>
+                        <option value="3">3x3</option>
+                        <option value="4">4x4</option>
+                    </select>
+                </td>
+            </tr>
+          <!--  <tr>
+                <td class="tt">RTSP端口</td>
+                <td colspan="3"><input id="rtspport" type="text" class="txt" />（可选参数）</td>
+            </tr>
+-->
+            <tr>
+                <td colspan="4">
+                    <input type="button" class="btn" value="登录" onclick="clickLogin()" />
+                    <input type="button" class="btn" value="退出" onclick="clickLogout();" />
+                    <input type="button" class="btn2" value="获取基本信息" onclick="clickGetDeviceInfo();" />
+                </td>
+            </tr>
+            <tr>
+                <td class="tt">已登录设备</td>
+                <td>
+                    <select id="ip" class="sel" onchange="getChannelInfo();getDevicePort();"></select>
+                </td>
+                <td class="tt">通道列表</td>
+                <td>
+                    <select id="channels" class="sel"></select>
+                </td>
+            </tr>
+        </table>
+    </fieldset>
+    <fieldset class="preview">
+        <legend>预览</legend>
+        <table cellpadding="0" cellspacing="3" border="0">
+            <tr>
+                   <!-- <td class="tt">码流类型</td>
+                    <td>
+                         <input id="streamtype" class="sel" value = "1">
+                    </input>
+                    </td>-->
+                    <td>
+                <input type="button" class="btn" value="开始预览" onclick="clickStartRealPlay();" />
+                <input type="button" class="btn" value="停止预览" onclick="clickStopRealPlay();" />
+            </td>
+        </tr>
+        </table>
+    </fieldset>
+    <fieldset class="ptz">
+        <legend>云台控制</legend>
+        <table cellpadding="0" cellspacing="3" border="0" class="left">
+            <tr>
+                <td>
+                    <input type="button" class="btn" value="左上" onmousedown="mouseDownPTZControl(5);" onmouseup="mouseUpPTZControl();" />
+                    <input type="button" class="btn" value="上" onmousedown="mouseDownPTZControl(1);" onmouseup="mouseUpPTZControl();" />
+                    <input type="button" class="btn" value="右上" onmousedown="mouseDownPTZControl(7);" onmouseup="mouseUpPTZControl();" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="button" class="btn" value="左" onmousedown="mouseDownPTZControl(3);" onmouseup="mouseUpPTZControl();" />
+                    <input type="button" class="btn" value="自动" onclick="mouseDownPTZControl(9);" />
+                    <input type="button" class="btn" value="右" onmousedown="mouseDownPTZControl(4);" onmouseup="mouseUpPTZControl();" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="button" class="btn" value="左下" onmousedown="mouseDownPTZControl(6);" onmouseup="mouseUpPTZControl();" />
+                    <input type="button" class="btn" value="下" onmousedown="mouseDownPTZControl(2);" onmouseup="mouseUpPTZControl();" />
+                    <input type="button" class="btn" value="右下" onmousedown="mouseDownPTZControl(8);" onmouseup="mouseUpPTZControl();" />
+                </td>
+            </tr>
+        </table>
+        <table cellpadding="0" cellspacing="3" border="0" class="left">
+            <tr>
+                <td class="tt">云台速度</td>
+                <td>
+                    <select id="ptzspeed" class="sel">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4" selected>4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td class="tt">预置点号</td>
+                <td><input id="preset" type="text" class="txt" value="1" /></td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="button" class="btn" value="设置" onclick="clickSetPreset();" />
+                    <input type="button" class="btn" value="调用" onclick="clickGoPreset();" />
+                </td>
+            </tr>
+        </table>
+        <table cellpadding="0" cellspacing="3" border="0" class="left">
+            <tr>
+                <td class="tt"><input type="button" class="btn2" value="变倍+" onmousedown="PTZZoomIn()" onmouseup="PTZZoomStop()"></td>
+                <td><input type="button" class="btn2" value="变倍-" onmousedown="PTZZoomout()" onmouseup="PTZZoomStop()"></td>
+            </tr>
+            <tr>
+                <td class="tt"><input type="button" class="btn2" value="变焦+" onmousedown="PTZFocusIn()" onmouseup="PTZFoucusStop()"></td>
+                <td><input type="button" class="btn2" value="变焦-" onmousedown="PTZFoucusOut()" onmouseup="PTZFoucusStop()"></td>
+            </tr>
+            <tr>
+                <td class="tt"><input type="button" class="btn2" value="光圈+" onmousedown="PTZIrisIn()" onmouseup="PTZIrisStop()"></td>
+                <td><input type="button" class="btn2" value="光圈-" onmousedown="PTZIrisOut()" onmouseup="PTZIrisStop()"></td>
+            </tr>
+        </table>
+    </fieldset>
+    <!-- <fieldset class="playback">
+        <legend>回放</legend>
+        <table width="100%" cellpadding="0" cellspacing="3" border="0">
+            <tr>
+                <td class="tt">码流类型</td>
+                <td>
+                    <select id="record_streamtype" class="sel">
+                        <option value="1">主码流</option>
+                        <option value="2">子码流</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td class="tt">开始时间</td>
+                <td>
+                    <input id="starttime" type="text" class="txt" value="2013-12-10 00:00:00" />（时间格式：2013-11-11 12:34:56）
+                </td>
+            </tr>
+            <tr>
+                <td class="tt">结束时间</td>
+                <td>
+                    <input id="endtime" type="text" class="txt" value="2013-12-11 23:59:59" />
+                    <input type="button" class="btn" value="搜索" onclick="clickRecordSearch(0);" />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div id="searchdiv" class="searchdiv">
+                        <table id="searchlist" class="searchlist" cellpadding="0" cellspacing="0" border="0"></table>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="button" class="btn2" value="开始回放" onclick="clickStartPlayback();" />
+                    <input type="button" class="btn2" value="停止回放" onclick="clickStopPlayback();" />
+                    <input type="button" class="btn" value="倒放" onclick="clickReversePlayback();" />
+                    <input type="button" class="btn" value="单帧" onclick="clickFrame();" />
+                    <input id="transstream" type="checkbox" class="vtop" />&nbsp;启用转码码流
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="button" class="btn" value="暂停" onclick="clickPause();" />
+                    <input type="button" class="btn" value="恢复" onclick="clickResume();" />
+                    <input type="button" class="btn" value="慢放" onclick="clickPlaySlow();" />
+                    <input type="button" class="btn" value="快放" onclick="clickPlayFast();" />
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="button" class="btn" value="抓图" onclick="clickCapturePic();" />
+                    <input type="button" class="btn2" value="开始剪辑" onclick="clickStartRecord('playback');" />
+                    <input type="button" class="btn2" value="停止剪辑" onclick="clickStopRecord('playback');" />
+                    <input type="button" class="btn2" value="OSD时间" onclick="clickGetOSDTime();" />&nbsp;<input id="osdtime" type="text" class="txt" readonly />
+                </td>
+            </tr>
+        </table>
+    </fieldset> -->
+</div>
+<div data-options="region:'east'" style="width:500px;padding:10px">
+    <fieldset class="operate">
+        <legend>操作信息</legend>
+        <div id="opinfo" class="opinfo"></div>
+    </fieldset>
+    <fieldset class="callback">
+        <legend>事件回调信息</legend>
+        <div id="cbinfo" class="cbinfo"></div>
+    </fieldset>
+</div>
+</body>
+<script src={% static "webVideoCtrl.js" %} type="text/javascript"></script>
+<script src={% static "demo.js" %} type="text/javascript"></script>
+</html>

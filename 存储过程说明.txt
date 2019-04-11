@@ -1,0 +1,49 @@
+/*
+存储过程创建函数
+*/
+DELIMITER $$
+
+CREATE
+    /*[DEFINER = { user | CURRENT_USER }]*/
+    PROCEDURE `aliyun`.`proc_get_column_comment`(IN database_str VARCHAR(100),IN table_str VARCHAR(100),IN column_str VARCHAR(100),OUT column_comment_str VARCHAR(100))
+    /*LANGUAGE SQL
+    | [NOT] DETERMINISTIC
+    | { CONTAINS SQL | NO SQL | READS SQL DATA | MODIFIES SQL DATA }
+    | SQL SECURITY { DEFINER | INVOKER }
+    | COMMENT 'string'*/
+    BEGIN
+     SELECT column_comment FROM INFORMATION_SCHEMA.Columns WHERE table_schema=database_str  AND table_name=table_str AND  column_name=column_str INTO column_comment_str;
+
+     SELECT column_comment_str;
+    END$$
+
+DELIMITER ;
+
+
+
+
+
+
+
+
+
+
+/*
+存储过程mysql调用过程
+*/
+/*declare	@database_name varchar(100);
+DECLARE	@Table_name VARCHAR(100);
+DECLARE	@column_name VARCHAR(100);
+DECLARE	@comment_name VARCHAR(100);*/
+SET @database_name = 'aliyun';
+SET @Table_name ='Goods_Table';
+SET @column_name = 'goodsName';
+SET @comment_name = '';
+CALL proc_get_column_comment(@database_name,@Table_name,@column_name,@comment_name);
+SELECT @comment_name;
+
+
+
+
+/////////////////////////////////////////////////////////////
+//django调用方式

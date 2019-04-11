@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+     <link rel="stylesheet" href="/static/Themes/EasyUI/default/easyui.css" />
+    <link rel="stylesheet" href="/static/Themes/EasyUI/icon.css" />
+    <script src="/static/Themes/EasyUI/jquery.min.js"></script>
+    <script src="/static/Themes/EasyUI/jquery.easyui.min.js"></script>
+    <script src="/static/Themes/Scripts/FunctionJS.js"></script>
+    <script>
+        $(document).ready(function () {
+          //  LoadTree();
+           LoadData();
+            //LoadToolBar();
+        })
+        //部门树  现不用
+        function LoadTree() {
+            var dataJson;
+            var parm = "action=LoadTree";
+            getAjax("/user/", parm, function (data) {
+                dataJson = jQuery.parseJSON(data);
+            });
+            $("#tr").tree({
+                data: dataJson,
+                checkbox: true,
+            });
+            $("#tr").tree({
+                onClick: function (node) {
+                    var depart_id = node.id;
+                    LoadData(depart_id);
+                }
+            });
+        }
+
+        //用户数据 现用 部门 角色 用户treegrid
+        function LoadData() {
+            var dataJson2;
+            var parm = "action=LoadData";
+            getAjax("/user/", parm, function (data) {
+                dataJson2 = jQuery.parseJSON(data);
+            });
+
+            $("#tg").treegrid({
+                data: dataJson2,
+                idField: 'id',
+                treeField: 'name',
+                columns: [[
+                    { title: "选择框", field: "ck", checkbox: true, width: "10%" },//field是列字段的名称
+                    //{ title: "属性", field: "nature", width: "10%" },
+                    { title: "名称", field: "name", width: "25%" },
+                    //{ title: "密码", field: "pwd", width: "10%" },
+                    { title: "所属部门", field: "own_departname", width: "19%", align: 'center' },
+                    { title: "所属角色", field: "own_rolename", width: "18%", align: 'center' },
+                    {
+                        title: '附属信息', field: 'opt', width: '10%', align: 'center',
+                        formatter: function (value, row, index) {//单元格formatter(格式化器)函数，带3个参数： value：字段值 row：行记录数据  index: 行索引。
+                            if (row.nature_id == 3) {
+                                var btn = "<a class='optcls' onclick='showinfo(" + row.id + "," + row.trueid + "," + "\"" + row.name + "\"" + "," + row.own_departid + ")'></a>";
+                                return btn;
+                            }
+                        }
+                    },
+                    {
+                        title: '页面权限', field: 'opt2', width: '10%', align: 'center',
+                        formatter: function (value, row, index) {
+                            if (row.nature_id == 3) {
+                                var btn = "<a class='optcls2' onclick='editpremis(" + row.id + "," + row.trueid + "," + "\"" + row.name + "\"" + ")'></a>";
+                                return btn;
+                            }
+                        }
+                    },
+                      {
+                          title: '主管权限', field: 'opt3', width: '10%', align: 'center',
+                          formatter: function (value, row, index) {
+                              if (row.nature_id == 3) {
+                                  var btn = "<a class='optcls3' onclick='editpremis1(" + row.id + "," + row.trueid + "," + "\"" + row.name + "\"" + ")'></a>";
+                                  return btn;
+                              }
+                          }
+                      }
+                    //{ title: "创建时间", field: "create_time", width: "11%", align: 'center' },
+                    //{ title: "创建人", field: "create_uname", width: "11%", align: 'center' },
+                    //{ title: "更新时间", field: "update_time", width: "11%", align: 'center' },
+                    //{ title: "更新人", field: "update_uname", width: "11%", align: 'center' }
+
+                ]],
+                onLoadSuccess: function (data) {
+                    $('.optcls').linkbutton({ text: '附属信息', plain: true, iconCls: 'icon-ok' })
+                    $('.optcls2').linkbutton({ text: '页面权限', plain: true, iconCls: 'icon-edit' })
+                    $('.optcls3').linkbutton({ text: '主管权限', plain: true, iconCls: 'icon-edit' })
+                },
+                rownumbers: true,
+                singleSelect: true,
+                checkOnSelect: true,
+            });
+        }
+
+        function LoadToolBar() {
+            var json = [];
+            var parm = "action=LoadToolBar";
+            getAjax("/user/", parm, function (data) {
+                json = jQuery.parseJSON(data);
+            });
+            if( json != '' )
+            {
+                var selectbox = {text: '<select id="tg_slec1" class="easyui-combobox" data-options="valueField: "id",textField: "text",panelHeight:"auto"," style="width: 70px;"><option value="1">部门</option><option value="2">角色</option><option value="3">成员</option></select>'}
+                var selectinput = {text: '<input id=\"tg_slec1_txt\" style=\"width: 110px\">'};
+                var selectbutton = {
+                    text: '查询', iconCls: 'icon-search', handler: function () {
+                        search()
+                    }
+                };
+                json.push('-');
+                json.push(selectbox);
+                json.push(selectbutton);
+                json.push(selectinput);
+
+                $('#tg').treegrid({
+                    toolbar: json,
+                });
+            }
+        }
+
+        //刷新 treegrid
+        function fresh() {
+            LoadData();
+        }
+
+        function search() {
+            var tg_slec1_value = $("#tg_slec1").find("option:selected").val();
+            var tg_slec1_txt = $("#tg_slec1_txt").val();
+
+            var dataJson2;
+            var parm = "action=SearchData&tg_slec1_value=" + tg_slec1_value + "&tg_slec1_txt=" + tg_slec1_txt;
+            getAjax("indexdata.ashx", parm, function (data) {
+                if (data != "") {
+                    dataJson2 = eval("(" + data + ")");
+                }
+            });
+            $("#tg").treegrid('loadData', dataJson2);
+        }
+
+
+        //增加 treegrid
+        function add() {
+            var checkedrows = $('#tg').treegrid('getChecked');
+            if (checkedrows.length != 0) {
+                var nature_id = checkedrows[0].nature_id;
+                var trueid = checkedrows[0].trueid;
+                //勾选的是索引节点， 名称为 所在所有部门
+                if (nature_id == 0) {
+                    add1(trueid);
+                }
+                //勾选的是顶级部门
+                if (nature_id == 1) {
+                    add1(trueid);
+                }
+                //勾选的是角色  添加用户
+                if (nature_id == 2) {
+                    add3(trueid);
+                }
+
+            }
+            else {
+                alert("请先勾选部门或角色!");
+            }
+        }
+
+        //删除 treegrid
+        function delet() {
+            var checkedrows = $('#tg').treegrid('getChecked');
+            if (checkedrows.length != 0) {
+                var rowid = checkedrows[0].id;
+                var nature_id = checkedrows[0].nature_id;
+                var trueid = checkedrows[0].trueid;
+
+                var childrennodes = $('#tg').treegrid('getChildren', rowid);
+                //if (confirm("确定删除?")) {
+                 //勾选的是索引节点， 名称为 所在所有部门
+                if (nature_id == 0) {
+                    alert("不能删除此节点!");
+                }
+                    // 删部门 没有子节点          //勾选的是顶级部门
+                else if (nature_id == 1 && childrennodes.length == 0) {
+                    if (confirm("确定删除部门?")) {
+                        delete1(trueid);
+                    }
+                }
+                //勾选的是角色
+                else if (nature_id == 2) {
+                    if (confirm("确定删除部门角色?")) {
+                        delete2(trueid, rowid);
+                    }
+                }
+                //勾选的是用户
+                else if (nature_id == 3) {
+                    if (confirm("确定删除用户?")) {
+                        delete3(trueid, rowid);
+                    }
+                }
+                else {
+                    alert("所删除项有子节点，即有子部门或角色，不能删除");
+                }
+                //}
+            }
+            else {
+                alert("请先勾选部门或角色!");
+            }
+        }
+
+        //编辑 treegrid
+        function edit() {
+            var checkedrows = $('#tg').treegrid('getChecked');
+            if (checkedrows.length != 0) {
+                var rowid = checkedrows[0].id;
+                var nature_id = checkedrows[0].nature_id;
+                var trueid = checkedrows[0].trueid;
+                var name = checkedrows[0].name;
+
+                if (nature_id == 0) {
+                    alert("不能编辑此节点!");
+                }
+
+                //编辑部门
+                if (nature_id == 1) {
+                    edit1(trueid, name);
+                }
+                if (nature_id == 3) {
+                    var pwd = checkedrows[0].pwd;
+                    edit3(trueid, name, pwd);
+
+                }
+
+            }
+            else {
+                alert("请先勾选部门或角色!");
+            }
+        }
+
+
+        /////// 添加部门 ///
+        function add1(trueid) {
+            /*
+            var parm = "action=EnableAddDepartment&trueid=" + trueid;
+            var backindex;
+            getAjax("indexdata.ashx", parm, function (data) {
+                backindex = data;
+            })*/
+            $("#cc").combobox({
+                width: '200px',
+                height: '50px',
+                data: [{"id":1,"text":"添加部门"},{"id":2,"text":"添加角色"}],
+                valueField: 'id',
+                textField: 'text',
+                panelHeight: 'auto',
+            });
+
+            $('#choose').show();
+            $('#choose').dialog({
+                title: "选择添加部门还是角色",
+                width: 300,
+                height: 180,
+                iconCls: 'icon-save',
+                buttons: [{
+                        text: '确定',
+                        iconCls: 'icon-ok',
+                        handler: function () {
+                            id= $('#cc').combobox('getValues');
+                            $('#choose').dialog('close');
+                             if (id == 1) {
+                                $('#dlg1_add').show();
+                                $('#dlg1_add').dialog({
+                                    title: "添加部门",
+                                    width: 300,
+                                    height: 180,
+                                    iconCls: 'icon-save',
+                                    buttons: '#dlg-buttons1_add',
+                                    modal: true,
+                                    shadow: true,
+                                    onResize: function () {
+                                        $('#dlg1_add').dialog('center');
+                                    },
+                                    onOpen: function () {
+                                        $("#info1_txt_add").textbox('clear');
+                                    },
+                                    onClose: function () {
+                                        //LoadData();
+                                    },
+                                })
+                            }
+                            else {
+                                 add2(trueid);
+                                 //添加角色
+                             }
+                        }
+                }],
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#choose').dialog('center');
+                },
+                onOpen: function () {
+                    $("#cc").textbox('clear');
+                },
+            });
+        }
+
+        function add1_save() {
+            var d_name = $('#info1_txt_add').textbox('getText');
+            if (d_name != "") {
+                var checkedrows = $('#tg').treegrid('getChecked');
+                var trueid = checkedrows[0].trueid;
+                var parm = "action=AddDepartment&trueid=" + trueid + "&d_name=" + d_name;
+                var backindex;
+                getAjax("/user/", parm, function (data) {
+                    backindex = jQuery.parseJSON(data);
+                })
+                if (backindex==1) {
+                    alert("增加部门成功!");
+                    LoadData();
+                    $('#dlg1_add').dialog('close');
+
+                }
+                else if(backindex == 2){
+                    alert("不能添加三级子部门，最多二级子部门!");
+                }
+                else {
+                    alert("增加部门失败!");
+                }
+
+            }
+            else {
+                alert("部门名称不能为空")
+
+            }
+        }
+
+        //删除部门
+        function delete1(trueid) {
+            var parm = "action=DeleteDepartment&trueid=" + trueid;
+            var backindex;
+            getAjax("/user/", parm, function (data) {
+                backindex = parseInt(data);
+            })
+            if (backindex > 0) {
+                alert("删除部门成功!");
+
+            }
+            else {
+                alert("删除部门失败!");
+            }
+            LoadData();
+
+        }
+
+        //编辑部门
+        function edit1(trueid, name) {
+            $('#dlg1_edit').show();
+            $('#dlg1_edit').dialog({
+                title: "编辑部门",
+                width: 300,
+                height: 180,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons1_edit',
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#dlg1_edit').dialog('center');
+                },
+                onOpen: function () {
+                    $("#info1_txt_edit").textbox('setText', name);
+                },
+                onClose: function () {
+                    //LoadData();
+                },
+            })
+
+        }
+
+        function edit1_save() {
+            var d_name = $('#info1_txt_edit').textbox('getText');
+            if (d_name != "") {
+                var checkedrows = $('#tg').treegrid('getChecked');
+                var trueid = checkedrows[0].trueid;
+                var parm = "action=EditDepartment&trueid=" + trueid + "&d_name=" + d_name;
+                var backindex;
+                getAjax("indexdata.ashx", parm, function (data) {
+                    backindex = parseInt(data);
+                })
+                if (backindex > 0) {
+                    alert("编辑部门成功!");
+                    LoadData();
+                    $('#dlg1_edit').dialog('close');
+
+                }
+                else {
+                    alert("编辑部门失败!");
+                }
+
+            }
+            else {
+                alert("部门名称不能为空");
+
+            }
+        }
+
+
+
+        ///////////////////// 角色 ////////////////////////
+        //添加角色
+        function add2(trueid) {
+            var checkedrows = $('#tg').treegrid('getChecked');
+            var trueid = checkedrows[0].trueid;
+
+            var parm = "action=GetRoles&trueid=" + trueid;
+            var backjson = [];
+            getAjax("/user/", parm, function (data) {
+                backjson = jQuery.parseJSON(data);
+            });
+
+            $("#info2_txt_add").combobox({
+                width: '200px',
+                height: '50px',
+                data: backjson,
+                valueField: 'id',
+                textField: 'text',
+                multiple: true,
+                panelHeight: 'auto',
+            });
+
+            $('#dlg2_add').show();
+            $('#dlg2_add').dialog({
+                title: "添加角色",
+                width: 300,
+                height: 180,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons2_add',
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#dlg2_add').dialog('center');
+                },
+                onOpen: function () {
+                    $("#info2_txt_add").textbox('clear');
+                },
+                onClose: function () {
+                    //LoadData();
+                },
+            });
+
+        }
+
+        function add2_save() {
+            var checkedrows = $('#tg').treegrid('getChecked');
+            var trueid = checkedrows[0].trueid;
+
+            var values = $('#info2_txt_add').combobox('getValues');
+            var roleids = JSON.stringify(values)
+            var parm = "action=AddRole&trueid=" + trueid + "&roleids=" + roleids;
+            var backjson;
+            getAjax("/user/", parm, function (data) {
+                backjson = jQuery.parseJSON(data)
+            })
+            var str = "";
+            for (var i = 0; i < backjson.length; i = i + 2) {
+                var name = backjson[i + 1];
+                if (backjson[i] == "1") {
+                    str += "'" + name + "' 角色添加成功!\n\r";
+                }
+                else if (backjson[i] == "2") {
+                    str += "'" + name + "' 已经在部门中!\n\r";
+                }
+                else {
+                    str += "'" + name + "' 角色添加失败!\n\r";
+                }
+            }
+            alert(str);
+            LoadData();
+            $('#dlg2_add').dialog('close');
+        }
+
+        //删除角色
+        function delete2(trueid, rowid) {
+            var parentnode = $('#tg').treegrid('getParent', rowid);
+            var parent_id = parentnode.trueid;
+            var parm = "action=DeleteRole&trueid=" + trueid + "&parent_id=" + parent_id;
+            var backindex;
+            getAjax("/user/", parm, function (data) {
+                backindex = data;
+            })
+            if (backindex == "1") {
+                alert("删除角色成功!");
+                LoadData();
+            }
+            else {
+                alert("删除角色失败!");
+            }
+        }
+
+        //////////////////////////////////// 用户 ///////////////////
+        //添加用户
+        function add3(trueid) {
+            $('#dlg3_add').show();
+            $('#dlg3_add').dialog({
+                title: "添加用户",
+                width: 500,
+                height: 480,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons3_add',
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#dlg3_add').dialog('center');
+                },
+                onOpen: function () {
+                    $("#info3_txt_add").textbox('clear');
+                    $("#info4_txt_add").textbox('clear');
+
+                },
+                onClose: function () {
+                    //LoadData();
+                },
+            });
+
+            //显示tab内容 已有用户
+
+            //工具栏
+        //    loaddg3toolbar();
+
+            //已有用户数据
+            var parm = "action=LoadUsers";
+            var datajson = [];
+            getAjax("/user/", parm, function (data) {
+                if (data != "") {
+                    datajson = jQuery.parseJSON(data);
+                }
+            })
+            $("#dlg3_dg").datagrid({
+                data: datajson,
+                columns: [[
+                          { field: 'ck', checkbox: true },
+                          { field: 'name', title: '用户', width: '28%', align: 'center', order: 'desc', sortable: true },
+                          { field: 'create_time', title: '创建时间', width: '28.5%', align: 'center', sortable: true },
+                          { field: 'create_uname', title: '创建人', width: '28%', align: 'center', sortable: true }
+                ]],
+                rownumbers: true,
+                selectOnCheck: true,
+                pageSize: 20,
+                pageList: [20, 50, 100, 200],
+                showFooter: true,
+                pagination: true,
+            })
+
+        }
+
+        function loaddg3toolbar() {
+            //dlg3_dg_slec1  部门
+            var json = [];
+            var parm = "action=LoadToolBarSlec1";
+            getAjax("/user/", parm, function (data) {
+                if (data != "") {
+                    json = eval("(" + data + ")");
+                }
+            })
+            var optionjson = [];
+            var html = "[";
+            for (var i = 0; i < json.length; i++) {
+                if (i == 0) {
+                    html += "{text:\"" + json[i].name + "\",id:" + json[i].depart_id + ",selected:true}";
+                }
+                else {
+                    html += ",{text:\"" + json[i].name + "\",id:" + json[i].depart_id + "}";
+                }
+            }
+            html += "]";
+            optionjson = eval("(" + html + ")");
+            $("#dlg3_dg_slec1").combobox("loadData", optionjson);
+
+            //dlg3_dg_slec2 角色
+            var json2 = [];
+            var parm2 = "action=LoadToolBarSlec2";
+            getAjax("/user/", parm2, function (data) {
+                if (data != "") {
+                    json2 = eval("(" + data + ")");
+                }
+            })
+            var optionjson2 = [];
+            var html2 = "[";
+            for (var i = 0; i < json2.length; i++) {
+                if (i == 0) {
+                    html2 += "{text:\"" + json2[i].name + "\",id:" + json2[i].role_id + ",selected:true}";
+                }
+                else {
+
+                    html2 += ",{text:\"" + json2[i].name + "\",id:" + json2[i].role_id + "}";
+                }
+            }
+            html2 += "]";
+            optionjson2 = eval("(" + html2 + ")");
+            $("#dlg3_dg_slec2").combobox("loadData", optionjson2);
+
+            //添加toolbar
+            $("#dlg3_dg").datagrid({
+                toolbar: '#dlg3_tb',
+            })
+        }
+
+        //刷新
+        function dlg3_2_freash() {
+            var parm = "action=LoadUsers";
+            var datajson = [];
+            getAjax("/user/", parm, function (data) {
+                if (data != "") {
+                    datajson = eval("(" + data + ")");
+                }
+            })
+            $("#dlg3_dg").datagrid('loadData', datajson);
+        }
+
+        //查询
+        function dlg3_2_search() {
+            var parent_id = $('#dlg3_dg_slec1').combobox('getValue');   //depart_id
+            var trueid = $('#dlg3_dg_slec2').combobox('getValue');   //role_id
+            var search_txt = $('#dlg3_tb_search_txt').textbox('getText');
+            var parm = "action=LoadUsersSearch&parent_id=" + parent_id + "&trueid=" + trueid + "&search_txt=" + search_txt;
+            var datajson = [];
+            getAjax("indexdata.ashx", parm, function (data) {
+                if (data != "") {
+                    datajson = eval("(" + data + ")");
+                }
+            })
+            $("#dlg3_dg").datagrid('loadData', datajson);
+
+        }
+
+        function add3_save() {
+            var tab = $('#dlg3_tab').tabs('getSelected');
+            var tabid = tab[0].id;
+            if (tabid == "tab_1") {
+                add3_save_1();
+            }
+            if (tabid == "tab_2") {
+                add3_save_2();
+            }
+        }
+
+        //添加新用户
+        function add3_save_1() {
+            var checkedrows = $('#tg').treegrid('getChecked');
+            var checkedrowid = checkedrows[0].id;
+            var trueid = checkedrows[0].trueid;     //role_id
+
+            var parentrow = $('#tg').treegrid('getParent', checkedrowid);
+            var parent_id = parentrow.trueid;       //depart_id
+
+            var user_name = $('#info3_txt_add').textbox('getText');
+            var user_pwd = $('#info4_txt_add').textbox('getText');
+            if (user_name == "" || user_name == "") {
+                alert("用户名和密码不能为空!");
+            }
+            else {
+
+                var parm = "action=AddUser1&parent_id=" + parent_id + "&trueid=" + trueid + "&user_name=" + user_name + "&user_pwd=" + user_pwd;
+                var backindex;
+                getAjax("/user/", parm, function (data) {
+                    backindex = data;
+                })
+                if (backindex != "0") {
+                    alert("添加用户成功!");
+
+                    $('#dlg3_add').dialog('close');
+                    LoadData();
+
+                }
+                else {
+                    alert("添加用户失败!");
+                }
+            }
+
+        }
+
+        //添加已有用户
+        function add3_save_2() {
+            var checkedrows = $('#tg').treegrid('getChecked');
+            var checkedrowid = checkedrows[0].id;
+            var trueid = checkedrows[0].trueid;     //role_id
+
+            var parentrow = $('#tg').treegrid('getParent', checkedrowid);
+            var parent_id = parentrow.trueid;       //depart_id
+
+            var checkeduserrows = $("#dlg3_dg").datagrid('getChecked');
+            if (checkeduserrows.length != 0) {
+                var users = JSON.stringify(checkeduserrows);
+                var parm = "action=AddUser2&parent_id=" + parent_id + "&trueid=" + trueid + "&users=" + users;
+                var backjson;
+                getAjax("/user/", parm, function (data) {
+                    if (data != "") {
+                        backjson = jQuery.parseJSON(data);
+
+                    }
+                })
+                var str = "";
+                for (var i = 0; i < backjson.length; i = i + 2) {
+                    if (backjson[i + 1] == "1") {
+                        str += "'" + backjson[i] + "'添加成功!\n\r"
+                    }
+                    else if (backjson[i + 1] == "2") {
+                        str += "'" + backjson[i] + "'已经在部门、角色中!\n\r"
+                    }
+                    else {
+                        str += "'" + backjson[i] + "'添加失败!\n\r";
+                    }
+                }
+                alert(str);
+                $('#dlg3_add').dialog('close');
+                LoadData();
+
+            }
+            else {
+                alert("请选择需要添加的用户!");
+            }
+        }
+
+        //删除用户
+        function delete3(trueid, rowid) {
+            var parentnode = $('#tg').treegrid('getParent', rowid);
+            var parent_id = parentnode.trueid;   //role_id
+
+            var paparentnode = $('#tg').treegrid('getParent', parentnode.id);
+            var paparent_id = paparentnode.trueid;   //depart_id
+            trees = JSON.stringify(paparentnode);
+            var parm = "action=DeleteUser&trueid=" + trueid + "&parent_id=" + parent_id + "&paparent_id=" + paparent_id + "&trees="+trees;
+            var backindex;
+            getAjax("/user/", parm, function (data) {
+                backindex = data;
+            })
+            if (backindex == "1") {
+                alert("移除用户成功!");
+                LoadData();
+            }
+            else {
+                alert("移除角色失败!");
+            }
+
+        }
+
+        //编辑用户
+        function edit3(trueid, name, pwd) {
+
+            $('#dlg3_edit').show();
+            $('#dlg3_edit').dialog({
+                title: "编辑用户",
+                width: 300,
+                height: 200,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons3_edit',
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#dlg3_edit').dialog('center');
+                },
+                onOpen: function () {
+                    $("#info3_txt_edit").textbox('setText', name);
+                    $("#info4_txt_edit").textbox('setText', pwd);
+
+                },
+                onClose: function () {
+                    //LoadData();
+                },
+            })
+        }
+
+        function edit3_save() {
+            var user_name = $('#info3_txt_edit').textbox('getText');
+            var user_pwd = $('#info4_txt_edit').textbox('getText');
+
+            if (user_name != "" && user_pwd != "") {
+                var checkedrows = $('#tg').treegrid('getChecked');
+                var trueid = checkedrows[0].trueid;
+                var parm = "action=EditUser&trueid=" + trueid + "&user_name=" + user_name + "&user_pwd=" + user_pwd;
+                var backindex;
+                getAjax("indexdata.ashx", parm, function (data) {
+                    backindex = parseInt(data);
+                })
+                if (backindex > 0) {
+                    alert("编辑用户成功!");
+                    LoadData();
+                    $('#dlg3_edit').dialog('close');
+
+                }
+                else {
+                    alert("编辑用户失败!");
+                }
+
+            }
+            else {
+                alert("用户名、密码不能为空");
+
+            }
+        }
+
+        ////////////////////// 用户 附属信息  //////////////////////
+        //////显示附属信息
+        function showinfo(rowid, trueid, name, own_departid) {
+
+
+            //var parentnode = $('#tg').treegrid('getParent', rowid);
+            //var parent_id = parentnode.id;            //role_id
+
+            //var paparentnode = $('#tg').treegrid('getParent', parent_id);
+            //var paparent_id = paparentnode.trueid;   //depart_id
+            var paparent_id = own_departid;
+
+            var parm = "action=GetUserRoles&trueid=" + trueid + "&paparent_id=" + paparent_id;     //trueid user_id
+            var backjson;
+            getAjax("indexdata.ashx", parm, function (data) {
+                if (data != "") {
+                    backjson = eval("(" + data + ")");
+                }
+            })
+
+
+            for (var i = 0; i < backjson.length; i++) {
+                var html = "";
+                html = "<table id='tab_user_pg_" + trueid + "_" + backjson[i].role_id + "' class='easyui-propertygrid' style='width: 100%; height: 80%'>"
+                        + "</table>";
+
+                //添加tab
+                $('#dlg4_tb').tabs('add', {
+                    id: "tab_user_tb_" + trueid + "_" + backjson[i].role_id,
+                    title: backjson[i].name,
+                    content: html,
+                    closable: true,
+                    width: '100%',
+                    height: '80%',
+
+                });
+
+            }
+
+            for (var i = 0; i < backjson.length; i++) {
+                var backdata1 = [];
+                var parm = "action=LoadUserRoleInfo&trueid=" + trueid + "&parent_id=" + backjson[i].role_id;
+                getAjax("indexdata.ashx", parm, function (data) {
+                    if (data != "") {
+                        backdata1 = eval("(" + data + ")");
+                        $("#tab_user_pg_" + trueid + "_" + backjson[i].role_id).propertygrid({
+                            columns: [[
+                                        { field: 'name', title: '属性', width: 100, sortable: true },
+                                        { field: 'value', title: '值', width: 100, resizable: false }
+                            ]],
+                            data: backdata1,
+                            showGroup: true,
+                            onClickRow: onClickRow,
+
+                        });
+                    }
+                })
+
+
+            }
+
+            $('#dlg4').show();
+            $('#dlg4').dialog({
+                title: "角色附属信息",
+                width: 600,
+                height: 450,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons4',
+                modal: true,//将窗体显示为模式化窗口
+                shadow: true,//在窗体显示的时候显示阴影
+                onResize: function () {
+                    $('#dlg4').dialog('center');
+                },
+                onClose: function () {
+                    //关打开的tabs
+                    var tabs = $('#dlg4_tb').tabs('tabs');
+                    if (tabs != null) {
+                        var array_title = new Array();
+                        for (var i = 0; i < tabs.length; i++) {
+                            var title = tabs[i].panel('options').title;
+                            array_title.push(title);
+                        }
+                        for (var i = 0; i < array_title.length; i++) {
+                            $('#dlg4_tb').tabs('close', array_title[i]);
+
+                        }
+                    }
+                }
+            })
+
+        }
+
+        var editIndex = undefined;
+        function endEditing(pg_id) {
+            if (editIndex == undefined) { return true }
+            if ($("#" + pg_id).propertygrid('validateRow', editIndex)) {
+                $("#" + pg_id).propertygrid('endEdit', editIndex);
+                editIndex = undefined;
+                return true;
+            } else {
+                return false;
+            }
+        }
+        function onClickRow(index) {
+            var pg_id = this.getAttribute("id");
+            if (editIndex != index) {
+                if (endEditing(pg_id)) {
+                    $(this).propertygrid('selectRow', index)
+							.propertygrid('beginEdit', index);
+                    editIndex = index;
+                } else {
+                    $(this).propertygrid('selectRow', editIndex);
+                }
+            }
+
+        }
+
+        function endEditing2(trueid, roelid) {
+            if (editIndex == undefined) { return true }
+            if ($("#tab_user_pg_" + trueid + "_" + roelid).propertygrid('validateRow', editIndex)) {
+                $("#tab_user_pg_" + trueid + "_" + roelid).propertygrid('endEdit', editIndex);
+                editIndex = undefined;
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+
+        function edit4_save() {
+            var selectedtab = $('#dlg4_tb').tabs('getSelected');
+            var tabid = selectedtab[0].id;
+            var array = tabid.split("_");
+            var trueid = array[3];
+            var roelid = array[4];
+
+            if (endEditing2(trueid, roelid)) {
+                $("#tab_user_pg_" + trueid + "_" + roelid).propertygrid('acceptChanges');
+                var changerow = $("#tab_user_pg_" + trueid + "_" + roelid).propertygrid('getRows');
+
+                var parm = "action=EditUserRole&trueid=" + trueid + "&parent_id=" + roelid + "&changerow=" + JSON.stringify(changerow);
+                var backindex;
+                getAjax("indexdata.ashx", parm, function (data) {
+                    backindex = data;
+                })
+                if (backindex == "1") {
+                    alert("编辑用户角色附属成功!");
+
+                }
+                else {
+                    alert("编辑用户角色附属失败!");
+                }
+            }
+        }
+
+
+
+
+        ////////////////////////////////  用户权限 ///////////////////////////////////////////////
+
+        function editpremis(rowid, trueid, name) {
+            var parm = "action=LoadAccess";
+            var accessjson = [];
+            getAjax("/user/", parm, function (data) {
+                if (data != "") {
+                    accessjson = jQuery.parseJSON(data);
+                }
+            })
+
+            var parm = "action=LoadUserPermis&trueid=" + trueid;
+            var datajson = [];
+            getAjax("/user/", parm, function (data) {
+                if (data != "") {
+                    datajson = jQuery.parseJSON(data);
+                }
+            })
+
+            var editRow = undefined;
+            $("#dlg5_dg").datagrid({
+                data: datajson,
+                columns: [[
+                          { field: 'menu_name', title: '对象名称', width: '30%', align: 'center', order: 'desc', sortable: true },
+                          { field: 'access_name', title: '修改权限', width: '55%', align: 'center', editor: { type: 'combobox', options: { multiple: 'true', valueField: 'name', textField: 'name', data: accessjson, panelHeight: 'auto', required: false } } },
+                ]],
+                rownumbers: true,
+                onAfterEdit: function (rowIndex, rowData, changes) {
+                    editRow = undefined;
+                },
+                onDblClickRow: function (rowIndex, rowData) {
+                    if (editRow != undefined) {
+                        $("#dlg5_dg").datagrid('endEdit', editRow);
+                    }
+
+                    if (editRow == undefined) {
+                        $("#dlg5_dg").datagrid('beginEdit', rowIndex);
+                        editRow = rowIndex;
+                    }
+                },
+                onClickRow: function (rowIndex, rowData) {
+                    if (editRow != undefined) {
+                        $("#dlg5_dg").datagrid('endEdit', editRow);
+
+                    }
+                }
+            })
+
+            $('#dlg5').show();
+            $('#dlg5').dialog({
+                title: name + ": 修改用户权限",
+                width: 600,
+                height: 400,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons5',
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#dlg5').dialog('center');
+                },
+                onClose: function () {
+                    //LoadData();
+                },
+            })
+        }
+
+        //修改用户权限
+        function edit5_save() {
+            var rows = $("#dlg5_dg").datagrid('getRows');
+            var trueid = rows[0].user_id;
+            var rowsString = JSON.stringify(rows);
+
+            var parm = "action=EditUserPermis&rowsString=" + rowsString + "&trueid=" + trueid;
+            var backindex;
+            getAjax("/user/", parm, function (data) {
+                backindex = data;
+            })
+            if (backindex != "0") {
+               // alert("修改用户权限成功!");
+                $('#dlg5').dialog('close');
+            }
+            else {
+                alert("修改用户权限失败!");
+            }
+        }
+
+
+
+        ///////////////////主管权限//////////////////////////
+
+        function editpremis1() {
+            var selects1 = $('#tg').datagrid('getSelections');
+            var trueid2 = selects1[0].trueid;
+            var dataJson3;
+            var parm = "action=LoadData2&trueid2=" + trueid2;
+            getAjax("indexdata.ashx", parm, function (data) {
+                dataJson3 = eval("(" + data + ")");
+            });
+
+
+            $('#dlg6').show();
+            $('#dlg6').dialog({
+                title: "修改主管权限",
+                width: 600,
+                height: 400,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons6',
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#dlg6').dialog('center');
+                },
+                onClose: function () {
+                    //LoadData();
+                }
+            })
+
+
+
+            var dataJson2;
+            var parm = "action=LoadData1";
+            getAjax("indexdata.ashx", parm, function (data) {
+                dataJson2 = jQuery.parseJSON(data);
+            });
+
+            $("#dlg6_dg").treegrid({
+
+                data: dataJson2,
+                idField: 'id',
+                treeField: 'name',
+                columns: [[
+                    { title: "选择框", field: "ck", checkbox: true, width: "10%" },
+                    { title: "名称", field: "name", width: "40%" },
+                    { title: "所属部门", field: "own_departname", width: "30%", align: 'center' },
+                    { title: "所属角色", field: "own_rolename", width: "15%", align: 'center' },
+                ]],
+                singleSelect: false,
+                rownumbers: true,
+                checkOnSelect: true,
+                onCheck: function (index, row) {
+                    var cknodes = $(this).datagrid('getChecked');
+                    //var total = cknodes.length;
+                    //alert(cknodes.id);
+                },
+                onUncheck: function (index, row) {
+                    var cknodes = $(this).datagrid('getChecked');
+                    var total = cknodes.length;
+                    //$("#total").text(total);
+                },
+                onCheckAll: function (rows) {
+                    var cknodes = $(this).datagrid('getChecked');
+                    var total = cknodes.length;
+
+                },
+                onUncheckAll: function (rows) {
+                    var cknodes = $(this).datagrid('getChecked');
+                    var total = cknodes.length;
+                }
+            });
+
+            $("#dlg6_dg").treegrid('unselectAll');
+            for (i = 0; i < dataJson3.length; i++) {
+
+                $("#dlg6_dg").treegrid('select', dataJson3[i].id);
+                $("#dlg6_dg").treegrid('expandTo', dataJson3[i].id);
+            }
+
+
+
+        }
+
+        function edit6_save() {
+            var selects = $('#tg').datagrid('getSelections');
+            var trueid1 = selects[0].trueid;
+
+            var selectedRow = $('#dlg6_dg').datagrid('getSelections');
+            var personIds = [];
+
+            if (selectedRow.length == 0) {
+                $.messager.alert('操作提示', "请至少选择一个员工！", 'warning');
+                return;
+            }
+            for (var i = 0; i < selectedRow.length; i++) {
+                personIds.push(selectedRow[i].trueid);
+            }
+            var personId = personIds.join(',');
+
+
+            var parm = "action=EditUserPermis1&personId=" + personId + "&trueid1=" + trueid1;
+            var backindex;
+            getAjax("indexdata.ashx", parm, function (data) {
+                backindex = data;
+            })
+            if (backindex != "0") {
+                alert("修改用户权限成功!");
+                $('#dlg6').dialog('close');
+            }
+            else {
+                alert("修改用户权限失败!");
+            }
+
+        }
+
+
+
+
+
+    </script>
+
+    <style>
+        .tree li
+        {
+            padding: 2px 0 0 0;
+        }
+
+        .tabs-panels
+        {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="easyui-layout" style="width: 100%; height: 100%">
+
+    <div data-options="region:'center'" style="">
+        <div id="tb" class="easyui-tabs" style="width: 100%; height: 100%;">
+            <div title="部门角色用户" closable="true">
+                <table id="tg" class="easyui-treegrid" style="width: 100%; height: 100%">
+                    <a class="easyui-linkbutton" data-options="iconCls:'icon-reload',plain:true" onclick="fresh();">刷新</a>
+                    <a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true"  onclick="add();">增加</a>
+                    <a class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="edit();">编辑</a>
+                    <a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="delet();">删除</a>
+                    <select id="tg_slec1" class="easyui-combobox" data-options="valueField: 'id',textField: 'text',panelHeight:'auto'," style="width: 70px;">
+                        <option value="1">部门</option>
+                        <option value="2">角色</option>
+                        <option value="3">成员</option></select>
+                        <a class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true" onclick="search();">查询</a>
+                        <input id="tg_slec1_txt" style="width: 110px">
+                </table>
+            </div>
+        </div>
+
+      <div id="tb" style="padding:5px;height:auto">
+
+         <a href="#" id="A1" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-add'" onclick="showDlg_add();">新增</a>
+
+         <a href="#" id="A2" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-edit'" onclick="showDlg_edit();">编辑</a>
+
+           <a href="#" id="A3" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-remove'" onclick="task_delete();">删除</a>
+
+      </div>
+
+    </div>
+
+        <div id="dlg1_add" style="display: none; overflow: hidden; padding: 10px;">
+            <table>
+                <tr>
+                    <td>
+                        <span>部门名称：</span>
+                    </td>
+                    <td>
+                        <input class="easyui-textbox" required="true" id="info1_txt_add" type="text" style="width: 150px" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="dlg-buttons1_add" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="add1_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg1_add').dialog('close')">取消</a>
+        </div>
+
+        <!--//编辑部门的 dlg -->
+        <div id="dlg1_edit" style="display: none; overflow: hidden; padding: 10px;">
+            <table>
+                <tr>
+                    <td>
+                        <span>部门名称：</span>
+                    </td>
+                    <td>
+                        <input class="easyui-textbox" id="info1_txt_edit" type="text" style="width: 150px" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="dlg-buttons1_edit" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="edit1_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg1_edit').dialog('close')">取消</a>
+        </div>
+
+        <!--//添加角色的 dlg -->
+        <div id="dlg2_add" style="display: none; overflow: hidden; padding: 10px;">
+            <table>
+                <tr>
+                    <td>
+                        <span>角色：</span>
+                    </td>
+                    <td>
+                        <input class="easyui-combobox" required="true" id="info2_txt_add" type="text" style="" editable="false"/>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div id="dlg-buttons2_add" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="add2_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg2_add').dialog('close')">取消</a>
+        </div>
+
+        <!--//添加用户的 dlg -->
+        <div id="dlg3_add" style="display: none; overflow: hidden; padding: 2px;">
+            <div id="dlg3_tab" class="easyui-tabs" style="width: 100%; height: 100%;">
+
+                <div title="新用户" id="tab_1" style="padding: 8px;">
+                    <table>
+                        <tr>
+                            <td style="padding-left: 120px; padding-top: 130px">
+                                <span>用户名：</span>
+                            </td>
+                            <td style="padding-left: 10px; padding-top: 130px">
+                                <input class="easyui-textbox" required="true" id="info3_txt_add" type="text" style="width: 150px" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding-left: 120px; padding-top: 30px">
+                                <span>密  码：</span>
+                            </td>
+                            <td style="padding-left: 10px; padding-top: 30px">
+                                <input class="easyui-textbox" required="true" id="info4_txt_add" type="text" style="width: 150px" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div title="已有用户" id="tab_2" style="padding: 3px;">
+                    <table id="dlg3_dg" class="easyui-datagrid" style="width: 100%; height: 95%">
+                    </table>
+
+                    <div id="dlg3_tb">
+                        <table>
+                            <tr>
+                                <td>
+                                    <a href="#" class="easyui-linkbutton" iconcls="icon-reload" plain="true" style="float: left" onclick="dlg3_2_freash()">刷新</a>
+                                </td>
+                                <td>
+                                    <span style="padding-left: 5px;">部门：</span>
+                                    <select id="dlg3_dg_slec1" class="easyui-combobox" data-options=" valueField: 'id',textField: 'text',panelHeight:'auto'" style="width: 120px;">
+                                    </select>
+                                </td>
+                                <td>
+                                    <span style="padding-left: 5px;">角色：</span>
+                                    <select id="dlg3_dg_slec2" class="easyui-combobox" data-options=" valueField: 'id',textField: 'text',panelHeight:'auto'" style="width: 80px;">
+                                    </select>
+                                </td>
+                                <td>
+                                    <a href="#" class="easyui-linkbutton" iconcls="icon-search" plain="true" style="float: left" onclick="dlg3_2_search()">查询</a>
+                                    <input class="easyui-textbox" id="dlg3_tb_search_txt" type="text" style="width: 80px;" />
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div><!--dlg3_tb结束-->
+
+                </div><!--已有用户结束-->
+
+            </div><!-- dlg3_tab结束-->
+        </div><!--dlg3_add结束-->
+        <div id="dlg-buttons3_add" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="add3_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg3_add').dialog('close')">取消</a>
+        </div>
+
+        <!--/编辑用户的 dlg -->
+        <div id="dlg3_edit" style="display: none; overflow: hidden; padding: 2px;">
+            <div title="新用户" id="Div3" style="padding: 8px;">
+                <table>
+                    <tr>
+                        <td style="padding-left: 20px; padding-top: 25px">
+                            <span>用户名：</span>
+                        </td>
+                        <td style="padding-left: 5px; padding-top: 25px">
+                            <input class="easyui-textbox" required="true" id="info3_txt_edit" type="text" style="width: 150px" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-left: 20px; padding-top: 10px">
+                            <span>密  码：</span>
+                        </td>
+                        <td style="padding-left: 5px; padding-top: 10px">
+                            <input class="easyui-textbox" required="true" id="info4_txt_edit" type="text" style="width: 150px" />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div id="dlg-buttons3_edit" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="edit3_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg3_edit').dialog('close')">取消</a>
+        </div>
+
+
+        <!--//附属信息-->
+        <div id="dlg4" style="display: none; overflow: hidden; padding: 2px;">
+            <div id="dlg4_tb" class="easyui-tabs" style="width: 100%; height: 100%;">
+            </div>
+        </div>
+
+        <div id="dlg-buttons4" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="edit4_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg4').dialog('close')">取消</a>
+        </div>
+
+
+        <!--//权限管理-->
+        <div id="dlg5" style="display: none">
+            <table id="dlg5_dg" class="easyui-datagrid">
+            </table>
+        </div>
+
+        <div id="dlg-buttons5" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="edit5_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg5').dialog('close')">取消</a>
+        </div>
+
+      <!--  主管权限-->
+        <div id="dlg6" style="display: none">
+            <table id="dlg6_dg" class="easyui-datagrid">
+            </table>
+        </div>
+
+        <div id="dlg-buttons6" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="edit6_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg6').dialog('close')">取消</a>
+        </div>
+
+          <!--//选择添加部门还是角色 -->
+        <div id="choose" style="display: none; overflow: hidden; padding: 10px;">
+            <table>
+                <tr>
+                    <td>
+                        <input class="easyui-combobox" required="true" id="cc" type="text" style="" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+</body>
+</html>
+
+

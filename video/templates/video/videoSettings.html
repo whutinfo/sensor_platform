@@ -1,0 +1,870 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+
+    <link rel="stylesheet" href={% static "Themes/EasyUI/default/easyui.css" %} />
+    <link rel="stylesheet" href={% static "Themes/EasyUI/icon.css" %} />
+    <script src={% static "Themes/EasyUI/jquery.min.js"%}></script>
+    <script src={% static "Themes/EasyUI/jquery.easyui.min.js"%}></script>
+    <script src={% static "Themes/Scripts/FunctionJS.js"%} type="text/javascript"></script>
+    <script src={% static "Themes/EasyUI/datagrid-export.js"%} type="text/javascript"></script>
+    <script>
+/************      只做了新增       *****************/
+        $(function () {
+            LoadTree();
+           // LoadData(0);
+            LoadDg1();
+
+        });
+
+        function dialog_refresh() {
+            LoadTree();
+          //  LoadData(0);
+            LoadDg1();
+        }
+
+
+        function LoadTree() {
+            var treejson = [];
+            var parm = "action=LoadTree";
+            getAjax("/videoSettings/", parm, function (data) {
+                treejson = jQuery.parseJSON(data);
+            })
+            $("#tre").tree({
+                data: treejson,
+                onlyLeafCheck: true,
+                checkbox: false,
+
+                onClick: function (node) {
+                    var device_id = node.id;
+                    //LoadData(device_id);
+                }
+            })
+        }
+
+         /***********加载本地入库信息数据****************/
+         function LoadDg1() {
+             var datajson = [];
+             var parm = 'action=LoadData';
+             getAjax("/videoSettings/", parm, function (backstring) {
+                 if (backstring != "") {
+                     datajson = jQuery.parseJSON(backstring);
+                 }
+             })
+             $("#dg1").datagrid('loadData', datajson);//加载本地数据，旧的行将被移除
+
+         }
+         /******************加载结束***********************/
+        function LoadData(id) {
+            var dataJson;
+            var parm = "action=LoadData&device_id=" + id;
+            getAjax("/videoSettings/", parm, function (data) {
+                dataJson = jQuery.parseJSON(data);
+            })
+
+            $("#tg").datagrid({
+                data: dataJson,
+                idField: 'id',
+                treeField: 'rfid',
+                columns: [[
+                    //{ field: 'CK', title: '', checkbox: true, width: "10%" },
+                    { title: "摄像头设备名", field: "value1", width: "15%" },
+                    { title: "ip地址", field: "value2", width: "18%" },
+                    { title: "端口号", field: "value3", width: "18%" },
+                    { title: "用户名", field: "value4", width: "18%" },
+                    { title: "密码", field: "value5", width: "10%" },
+                    { title: "rtsp端口号", field: "value6", width: "10%" },
+                    { title: "流类型", field: "value7", width: "10%" },
+                    { title: "设备端口", field: "value8", width: "10%" },
+                    { title: "设备类型", field: "value9", width: "10%" },
+
+                ]],
+                rownumbers: true,
+                singleSelect: true,
+                checkOnSelect: true,
+                toolbar: '#tb'
+
+            })
+
+        }
+
+        function alertwarn(content) {
+            content = "<p style='text-align:center'>" + content + "</p>";
+
+            $('#dlg_warn').show();
+            $('#dlg_warn').dialog({
+                title: '警告',
+                width: 250,
+                height: 100,
+                onResize: function () {
+                    $(this).dialog('center');
+                },
+                shadow: true,
+                content: content
+            });
+        }
+
+        /***    新增菜单    初始化下拉选项框****/
+        function InitCombox(index) {
+            var datajson1 = [];
+
+            getAjax("/videoSettings/", "action=LoadSelectMenu", function (data) {
+                if (data != "") {
+                    datajson1 = jQuery.parseJSON(data);
+                }
+            });
+            if (index == 1) {
+                datajson1.unshift({ 'id': 0, 'name': '新父菜单' });
+                $("#info2").combobox('loadData', datajson1);
+            }
+            else {
+                datajson1.unshift({ 'id': 0, 'name': '新父菜单' });
+                $("#info22").combobox('loadData', datajson1);
+            }
+        }
+
+        /*****      新增菜单   ****/
+        function showDlg_add() {
+
+            var selects = $('#tre').tree('getSelected');
+
+            if (selects != null) {
+                var nature_id = selects.nature_id;
+                var trueid = selects.trueid;
+
+                //勾选的是索引节点， 名称为 所有地点的设备
+                if (nature_id == 0) {
+                    add_node();  //add1 只能添加节点
+                }
+                //勾选的是节点
+                if (nature_id == 1) {
+                    add_choose();   //add2 选择添加节点还是设备
+                }
+                //勾选的是设备
+                if (nature_id == 2) {
+                  //  add3(trueid);
+                    alert('不可对设备添加节点！');
+                }
+
+            }
+            else {
+                alert("请先勾选节点!");
+            }
+
+        }
+
+
+        ///////  添加节点
+        function add_node() {
+
+            $('#dlg1_add').show();
+            $('#dlg1_add').dialog({
+
+                title: "添加节点",
+                width: 300,
+                height: 180,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons1_add',
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#dlg1_add').dialog('center');
+                },
+                onOpen: function () {
+                    $("#info1_txt_add").textbox('clear');
+                },
+                onClose: function () {
+                    LoadTree();
+                    LoadDg1();
+                },
+            })
+        }
+
+           ///////  添加设备
+        function add_device(trueid) {
+
+            $('#dlg2_add').show();
+            $('#dlg2_add').dialog({
+
+                title: "添加设备",
+                width: 300,
+                height: 180,
+                iconCls: 'icon-save',
+                buttons: '#dlg-buttons2_add',
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#dlg2_add').dialog('center');
+                },
+                onOpen: function () {
+                    LoadDevice();
+                    $("#info2_txt_add").combobox('setValue','');
+                },
+                onClose: function () {
+                    LoadTree();
+                    LoadDg1();
+                },
+            })
+        }
+
+        function LoadDevice() {
+
+            var datajson = [];
+             var parm = 'action=LoadDevice';
+             getAjax("/videoSettings/", parm, function (backstring) {
+                 if (backstring != "") {
+                     datajson = jQuery.parseJSON(backstring);
+                 }
+             })
+
+             $('#info2_txt_add').combobox({
+                 data: datajson,
+                 valueField: 'id',
+                 textField: 'name',
+                 showItemIcon: true,
+             })
+
+        }
+
+        function LoadNode() {
+
+            var datajson = [];
+             var parm = 'action=LoadNode';
+             getAjax("/videoSettings/", parm, function (backstring) {
+                 if (backstring != "") {
+                     datajson = jQuery.parseJSON(backstring);
+                 }
+             })
+
+             $('#info3_txt_add').combobox({
+                 data: datajson,
+                 valueField: 'id',
+                 textField: 'name',
+                 showItemIcon: true,
+             })
+
+        }
+        ///////  选择添加节点还是设备
+        function add_choose(trueid) {
+
+            $("#cc").combobox({
+                width: '200px',
+                height: '50px',
+                data: [{"id":1,"text":"添加节点"},{"id":2,"text":"添加设备"}],
+                valueField: 'id',
+                textField: 'text',
+                panelHeight: 'auto',
+                editable:false,  //不允许编辑！
+            });
+
+            $('#choose').show();
+            $('#choose').dialog({
+                title: "选择添加节点还是设备",
+                width: 300,
+                height: 180,
+                iconCls: 'icon-save',
+                buttons: [{
+                        text: '确定',
+                        iconCls: 'icon-ok',
+                        handler: function () {
+
+                            id= $('#cc').combobox('getValue');
+                            $('#choose').dialog('close');
+
+                             if (id == 1) {
+                               add_node(trueid)
+                            }
+                            else {
+                                 add_device(trueid);
+                                 //添加设备
+                             }
+                        }
+                }],
+                modal: true,
+                shadow: true,
+                onResize: function () {
+                    $('#choose').dialog('center');
+                },
+                onOpen: function () {
+                    $("#cc").textbox('clear');
+                },
+            });
+        }
+
+        /*****************  保存新增    ***********************/
+        // 保存节点
+        function add1_save() {
+            var selects = $('#tre').tree('getSelected');
+            var trueid = selects.trueid;
+
+            var node_name = $('#info1_txt_add').textbox('getText');
+
+            var parm = "action=AddNode&trueid=" + trueid + "&node=" + node_name;
+            var backjson = [];
+
+            //getAjax 第一个参数是Url 做相应的 更改
+            getAjax("/videoSettings/", parm, function (data) {
+                backjson = jQuery.parseJSON(data);
+                if (backjson == "1") {
+                    alert("添加成功！");
+                    $('#dlg1_add').dialog('close');
+                    LoadTree();
+                    LoadDg1();
+                }
+                else
+                    alert("添加失败");
+            });
+        }
+
+        // 保存设备
+        function add2_save() {
+            var selects = $('#tre').tree('getSelected');
+            var trueid = selects.trueid;  // 选择的节点id
+            var device = $('#info2_txt_add').combobox('getValue');   // 添加的设备id
+            var parm = "action=AddDevice&trueid=" + trueid + "&device=" + device;
+            var backjson = [];
+
+            //getAjax 第一个参数是Url 做相应的 更改
+            getAjax("/videoSettings/", parm, function (data) {
+                backjson = data;
+                if (backjson == "1") {
+                    alert("添加成功！");
+                    $('#dlg2_add').dialog('close');
+                    LoadTree();
+                    LoadDg1();
+                }
+                else if(backjson != '0'){  //已存在
+                    alert(backjson);
+
+                }
+
+                else
+                    alert("添加失败");
+            });
+        }
+
+
+        function export2exl(){
+            $("#dg1").datagrid('toExcel','dg.xls');    // export to excel
+        }
+
+        function ShowDlg3() {
+             $('#dlg3_add').show();
+             $('#dlg3_add').dialog({
+                 title: '新增节点',
+                 width: 705,
+                 height: 420,
+                 closed: false,
+                 shadow: true,
+                 onResize: function () {
+                     $(this).dialog('center');
+                 },
+                 onOpen: function () {
+                     $("#dlg3_txt_1").textbox('setValue', "");
+                     $("#dlg3_txt_2").textbox('setValue', "");
+                     $("#dlg3_txt_3").textbox('setValue', "");
+                     $("#dlg3_txt_4").textbox('setValue', "");
+                     $("#dlg3_txt_5").textbox('setValue', "");
+                     $("#dlg3_txt_6").textbox('setValue', "");
+                     $("#dlg3_txt_7").textbox('setValue', "");
+                     $("#dlg3_txt_8").textbox('setValue', "");
+                     $("#dlg3_txt_9").textbox('setValue', "");
+                     $("#dlg3_txt_10").textbox('setValue', "");
+                     LoadNode();
+                    $("#info3_txt_add").combobox('setValue','');
+                 },
+                 onClose: function () {
+                     LoadDg1();
+
+                 },
+                 buttons: '#dlg3-buttons1_add',
+
+             });
+         }
+
+         function add3_save(){
+            var value0= $('#dlg3_txt_1').val();
+            var value1= $('#dlg3_txt_2').val();
+            var value2= $('#dlg3_txt_3').val();
+            var value3= $('#dlg3_txt_4').val();
+            var value4= $('#dlg3_txt_5').val();
+            var value5= $('#dlg3_txt_6').val();
+            var value6= $('#dlg3_txt_7').val();
+            var value6= $('#dlg3_txt_7').val();
+            var value7= $('#dlg3_txt_8').val();
+            var value8= $('#dlg3_txt_9').val();
+            var value9=$("#dlg3_txt_10").val();
+            var node = $('#info3_txt_add').combobox('getValue');
+            var dataJson3;
+            var parm = "action=SaveDevice&value0=" + value0+"&value1= " + value1+"&value2= " + value2+"&value3= " + value3+"&value4= " + value4+"&value5= " + value5+"&value6= " + value6+"&value7= " + value7+"&value8= " + value8+"&value9= " + value9+ "&node=" + node;
+            getAjax("/videoSettings/", parm, function (data) {
+                dataJson3 = eval("(" + data + ")");
+            })
+            if (dataJson3 != "0")
+            {
+                $('#dlg3_add').dialog('close');
+                LoadData();
+                dialog_refresh();
+            }
+        }
+
+        function device_edit() {
+            var row = $('#dg1').datagrid('getSelected');
+            if (row) {
+                var field_id = row.value0;
+
+                $('#dlg3_edit').show().dialog({
+                    title: '编辑角色',
+                    width: 750,
+                    height: 400,
+                    closed: false,
+                    cache: false,
+
+                    modal: true,
+                    onOpen: function () {
+                        var body = $(this).panel('body');
+                        body.find('#dlg3_txt_e_1').textbox({ value: row.value1 });
+                        body.find('#dlg3_txt_e_2').textbox({ value: row.value2 });
+                        body.find('#dlg3_txt_e_3').textbox({ value: row.value3 });
+                        body.find('#dlg3_txt_e_4').textbox({ value: row.value4 });
+                        body.find('#dlg3_txt_e_5').textbox({ value: row.value5 });
+                        body.find('#dlg3_txt_e_6').textbox({ value: row.value6 });
+                        body.find('#dlg3_txt_e_7').textbox({ value: row.value7 });
+                        body.find('#dlg3_txt_e_8').textbox({ value: row.value8 });
+                        body.find('#dlg3_txt_e_9').textbox({ value: row.value9 });
+                    },
+
+                    buttons: [{
+                        text: '提交',
+                        iconCls: 'icon-ok',
+                        handler: function () {
+                            var value0= $('#dlg3_txt_e_1').val();
+                            var value1= $('#dlg3_txt_e_2').val();
+                            var value2= $('#dlg3_txt_e_3').val();
+                            var value3= $('#dlg3_txt_e_4').val();
+                            var value4= $('#dlg3_txt_e_5').val();
+                            var value5= $('#dlg3_txt_e_6').val();
+                            var value6= $('#dlg3_txt_e_7').val();
+                            var value6= $('#dlg3_txt_e_7').val();
+                            var value7= $('#dlg3_txt_e_8').val();
+                            var value8= $('#dlg3_txt_e_9').val();
+                            var value9= $('#dlg3_txt_e_10').val();
+
+                            var dataJson4;
+                            var parm = "action=EditDevice&field_id="+ field_id+ "&value0=" + value0+"&value1= " + value1+"&value2= " + value2+"&value3= " + value3+"&value4= " + value4+"&value5= " + value5+"&value6= " + value6+"&value7= " + value7+"&value8= " + value8+"&value9= " + value9;
+                            getAjax("/videoSettings/", parm, function (data) {
+                                dataJson4 = eval("(" + data + ")");
+                            })
+                            if (dataJson4==1) {
+                                $('#dlg3_edit').dialog('close');
+                                LoadData();
+                                dialog_refresh();
+
+                            }
+
+                        }
+                    }, {
+                        text: '取消',
+                        iconCls: 'icon-cancel',
+                        handler: function () {
+                            $('#dlg3_edit').dialog('close');
+                        }
+                    }]
+
+
+                });
+            }
+            else {
+                alert("请选中某一行！");
+
+            }
+
+
+
+        }
+        </script>
+
+
+
+
+
+
+</head>
+<body class="easyui-layout" style="width: 100%; height: 100%">
+    <div data-options="region:'west',split:true,title:'设备树'" style="width: 200px; padding: 1px 2px 2px 2px;">
+         <a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true"  onclick="showDlg_add()">增加</a>
+<!--        <a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="dialog_delete()">删除</a>-->
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="showDlg_edit();">编辑</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-reload',plain:true" onclick="dialog_refresh();">刷新</a>
+        <ul id="tre" class="easyui-tree">
+        </ul>
+    </div>
+
+
+    <div data-options="region:'center'" style="height: 100%">
+        <div id="toolbar1" style="padding: 2px 5px;">
+
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-reload'" onclick="export2exl()" >导出excel</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton"  data-options="plain:true,iconCls:'icon-add'" onclick="ShowDlg3();">新增设备</a>
+             <a href="#" class="easyui-linkbutton" iconcls="icon-edit" onclick="device_edit();" plain="true">编辑设备信息</a>
+         </div>
+         <table id="dg1" title="{{ datagrid_title }}" class="easyui-datagrid" data-options="" style="width: 99%; height: 95%;"
+            showFooter="true" pagination="true" singleSelect="true" selectOnCheck="true">
+              <thead>
+                <tr>
+                    <th data-options="field:'ck',checkbox:true"></th>
+                    {% for i in info_dict %}
+                        {% if i.field != 'value0' %}
+                            <th field="{{ i.field }}" width="{{ i.width }}" align="{{ i.align }}">{{ i.title }}</th>
+                        {% endif %}
+                    {% endfor %}
+
+                </tr>
+              </thead>
+         </table>
+    </div>
+
+    <!--//选择添加节点还是设备 -->
+    <div id="choose" style="display: none; overflow: hidden; padding: 10px;">
+        <table>
+            <tr>
+                <td>
+                    <input class="easyui-combobox" required="true" id="cc" type="text" style="" />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!--//添加节点的 dlg -->
+    <div id="dlg1_add" style="display: none; overflow: hidden; padding: 10px;">
+        <table>
+            <tr>
+                <td>
+                    <span>节点名称：</span>
+                </td>
+                <td>
+                    <input class="easyui-textbox" id="info1_txt_add" type="text" style="width: 150px" />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="dlg-buttons1_add" style="display: none;">
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="add1_save()">确定</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg1_add').dialog('close')">取消</a>
+    </div>
+
+    <!--//添加设备的 dlg -->
+    <div id="dlg2_add" style="display: none; overflow: hidden; padding: 10px;">
+        <table>
+            <tr>
+                <td>
+                    <span>设备名：</span>
+                </td>
+                <td>
+                    <input class="easyui-combobox" required="true" id="info2_txt_add" type="text" style="width: 150px" />
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <div id="dlg-buttons2_add" style="display: none;">
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="add2_save()">确定</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg2_add').dialog('close')">取消</a>
+
+    </div>
+
+
+    <div id="dlg_task_edit" style="display: none; overflow: hidden; padding: 10px 0px 0px 20px;">
+         <table>
+            <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单名称：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                    <input  id ="info12"  class="easyui-textbox"  style="width:200px"/>
+                </td>
+            </tr>
+
+                <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单跳转：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info32" class="easyui-textbox"  style="width:200px"/>
+                </td>
+            </tr>
+
+             <tr>
+             <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;">是否显示：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <select id="info42" class="easyui-combobox" style="width:203px">
+                     <option value="1">是</option>
+                     <option value="0">否</option>
+                        </select>
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单图标：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info72" class="easyui-textbox" style="width:200px"/>
+                </td>
+            </tr>
+
+               <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单描述：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info82" class="easyui-textbox" style="width:200px"/>
+                </td>
+            </tr>
+            <!--
+               <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单备注：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info92" class="easyui-textbox" style="width:200px"/>
+                </td>
+            </tr-->
+
+        </table>
+    </div>
+
+       <div id="dlg_task_edit_btn" style="display: none;">
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="task_edit()">确定</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg_task_edit').dialog('close')">取消</a>
+        </div>
+    <div id="dlg_warn" style="display: none">
+    </div>
+
+     <!--创建设备-->
+    <div id="dlg3_add" style="display: none;">
+        <div style="padding-top: 5px; padding-left: 5px; padding-right: 5px;">
+            <div class="easyui-panel" style="padding-top: 4px; padding-left: 20px; width: 680px; height: 400px;">
+                <table>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备名:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_1" style="width: 500px;" />
+                    </td>
+                    </tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备ip:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_2" style="width: 500px;" />
+                    </td>
+                    </tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">登陆端口:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_3" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+
+
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备登陆名:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_4" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备登陆密码:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_5" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备rtsp端口:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_6" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备码流类型</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_7" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备端口(可选参数)</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_8" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备类型</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_9" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">生产厂商</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_10" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">父节点</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                    <input class="easyui-combobox" required="true" id="info3_txt_add" type="text" style="width: 500px" />
+                </td>
+              </table>
+            </div>
+            <div id="dlg3-buttons1_add" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="add3_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg3_add').dialog('close')">取消</a>
+            </div>
+             </div>
+        </div>
+    <!--修改设备-->
+    <div id="dlg3_edit" style="display: none;">
+        <div style="padding-top: 5px; padding-left: 5px; padding-right: 5px;">
+            <div class="easyui-panel" style="padding-top: 4px; padding-left: 20px; width: 680px; height: 400px;">
+                <table>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备名:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_e_1" style="width: 500px;" />
+                    </td>
+                    </tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备ip:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_e_2" style="width: 500px;" />
+                    </td>
+                    </tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">登陆端口:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_e_3" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+
+
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备登陆名:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_e_4" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备登陆密码:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_e_5" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备rtsp端口:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_e_6" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备码流类型</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_e_7" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备端口(可选参数)</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_e_8" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">设备类型</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_e_9" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">生产厂商</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg3_txt_e_10" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                    <tr>
+              </table>
+            </div>
+            <div id="dlg3-buttons1_add" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="add3_save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg3_add').dialog('close')">取消</a>
+            </div>
+             </div>
+        </div>
+</body>
+</html>
+

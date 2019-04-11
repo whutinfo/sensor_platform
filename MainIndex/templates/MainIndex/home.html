@@ -1,0 +1,412 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+
+    <link rel="stylesheet" href="/static/Themes/EasyUI/default/easyui.css" />
+    <link rel="stylesheet" href="/static/Themes/EasyUI/icon.css" />
+    <script src="/static/Themes/EasyUI/jquery.min.js"></script>
+    <script src="/static/Themes/EasyUI/jquery.easyui.min.js"></script>
+    <script src="/static/Themes/Scripts/FunctionJS.js"></script>
+    <link href="/static/Themes/Styles/mystyle.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=1S7CEfK73uKsMpPPDmsEgWMv"></script>
+    <!--script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=您的密钥"-->
+
+    <script>
+        $(document).ready(function () {
+            LoadTree();
+           // LoadData1();
+            LoadMap();
+            //Loadinfo();
+           // adapt();
+
+        });
+
+        function adapt()
+        {
+            var height = document.getElementById("aa").offsetHeight - document.getElementById("aa1").offsetHeight;
+            document.getElementById("aa2").style.height = height + "px";
+        }
+
+
+        function Loadinfo() {
+            var parm = "action=getname";
+            getAjax("homeData.ashx", parm, function (data) {
+                //document.getElementById("homename").innerHTML = data;
+                document.getElementById("homename").value = data;
+            })
+
+            var parm = "action=getdeport";
+            getAjax("homeData.ashx", parm, function (data) {
+                //document.getElementById("homedeport").innerHTML = data;
+                document.getElementById("homedeport").value = data;
+            })
+
+            var parm = "action=getrole";
+            getAjax("homeData.ashx", parm, function (data) {
+                //document.getElementById("homerole").innerHTML = data;
+                document.getElementById("homerole").value = data;
+            })
+
+        }
+
+
+        var address_id_slec = -1;
+        function LoadTree() {
+            var treejson = [];
+            var parm = "action=LoadTree";
+            getAjax("/home/", parm, function (data) {
+                if (data != "") {
+                    treejson = eval("(" + data + ")");
+                }
+            })
+            $("#tree_site").tree({
+                data: treejson,
+                onClick: function (node) {
+                    ShowClickHandler(node.trueid);//结点的id是在加载结点时添加进去的属性，id为value_id
+                }
+            })
+        }
+
+
+
+
+
+        function LoadData1() {
+            var datajson = [];
+            var parm = "action=LoadData";
+            getAjax("indexdata.ashx", parm, function (data) {
+                if (data != "") {
+                    datajson = eval("(" + data + ")");
+                }
+            });
+
+
+            $("#dg").datagrid({
+                title: '报警详情表',
+                data: datajson,
+
+                columns: [[
+                          { field: 'value1', title: '监测站点', width: '14%', align: 'center', order: 'desc' },
+                          { field: 'value2', title: '检测设备', width: '16%', align: 'center', sortable: true },
+                          { field: 'value3', title: '采集数据值', width: '14%', align: 'center' },
+                          { field: 'value4', title: '采集时间', width: '14%', align: 'center' },
+                          { field: 'value5', title: '阀值', width: '15%', align: 'center' },
+                          { field: 'value6', title: '报警说明', width: '28%', align: 'center' }
+
+
+                ]],
+                //toolbar: '#tb',
+                tools: '#tb',
+                width: '100%',
+                height: '100%',
+                //collapsible: true,
+
+
+            })
+        }
+
+    </script>
+
+
+
+
+
+
+    <style>
+        body
+        {
+            box-sizing: border-box;
+        }
+
+        .tree li
+        {
+            padding: 4px 0 0 0;
+        }
+
+        .row
+        {
+            margin-right: 6px;
+            margin-left: 6px;
+            margin-top: 5px;
+        }
+
+            .row:before,
+            .row:after
+            {
+                display: table;
+                content: " ";
+            }
+
+            .row:after
+            {
+                clear: both;
+            }
+    </style>
+
+
+
+
+</head>
+
+<body class="easyui-layout" style="width: 100%; height: 100%">
+
+
+
+        <div id="aa1" class="row">
+            <div class="col-md-2" style="height: 150px;">
+                <div class="easyui-panel" title="登录信息" style="width: 100%; height: 100%; padding: 10px;">
+
+                    <table>
+                        <tr>
+                            <td style="font-size: 12px">用户姓名:</td>
+                            <td>
+                                <input id="homename" value="管理员" class="easyui-textbox" type="text" style="width: 65px; height: 25px;" /></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 12px">所属部门:</td>
+                            <td>
+                                <input id="homedeport" value="管理部" class="easyui-textbox" type="text" style="width: 65px; height: 25px;" /></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: 12px">所属角色:</td>
+                            <td>
+                                <input id="homerole" value="管理组长" class="easyui-textbox" type="text" style="width: 65px; height: 25px;" /></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-md-10" style="height: 150px;">
+                <table class="easyui-datagrid" id="dg">
+                </table>
+                <div id="tb" style="height: auto">
+                    <a href="#this" class="easyui-linkbutton" iconcls="icon-add" plain="true" onclick='window.parent.FAddTabMenu(64,"../CommonPages/AlarmPage/Alarm.aspx","报警信息","",true)'>更多</a>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="aa2" class="row">
+            <div class="col-md-2" id="panel_bottom1" style="height: inherit">
+                <div class="easyui-panel" id="panel_site" title="监测站点" style="width: 100%; height: 100%; padding: 5px;">
+                    <ul id="tree_site" class="easyui-tree">
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-10" id="panel_bottom2" style="height: inherit;">
+
+                <div class="easyui-panel" id="panel_map" title="地图区域展示" style="width: 100%; height: 100%; padding: 10px;">
+                    <div id="t1" style="width: 100%; height: 100%">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+
+
+
+
+    </div>
+    <script>
+
+        //alert(document.body.clientHeight);
+        //alert(window.screenTop);
+        //alert(window.parent.innerHeight);
+
+        //alert(window.screen.availHeight);
+        //alert(window.screen.height);
+
+        var height_auto = window.parent.document.body.clientHeight - 270;
+
+
+        document.getElementById('panel_bottom1').style.height = height_auto + 'px';
+        document.getElementById('panel_bottom2').style.height = height_auto + 'px';
+
+        $('#panel_site').panel({
+            tools: [{
+                iconCls: 'icon-reload',
+                handler: function () {
+                    LoadTree();
+                }
+            }]
+        });
+
+        $('#panel_map').panel({
+            tools: [{
+                iconCls: 'icon-reload',
+                handler: function () {
+                    LoadMap();
+                }
+            }]
+        });
+
+
+        var map = new BMap.Map("t1");// 创建Map实例
+        function LoadMap() {
+            map.centerAndZoom("武汉", 12);// 初始化地图,设置中心点坐标和地图缩放级别,级别数字越小看到的地图范围越大。
+            map.enableScrollWheelZoom();    //启用滚轮放大缩小，默认禁用
+            map.enableContinuousZoom();    //启用地图连续缩放，默认禁用
+
+            map.addControl(new BMap.NavigationControl());  //添加默认缩放平移控件
+            map.addControl(new BMap.OverviewMapControl()); //添加默认缩略地图控件
+            map.addControl(new BMap.OverviewMapControl({ isOpen: true, anchor: BMAP_ANCHOR_BOTTOM_RIGHT }));   //右下角，打开
+                                            //缩略地图添加到地图后的开合状态，默认为关闭;控件的停靠位置,右下角
+            var localSearch = new BMap.LocalSearch(map);//用于位置检索、周边检索和范围检索.
+                        //当参数为地图实例时，检索位置由当前地图中心点确定，且搜索结果的标注将自动加载到地图上，并支持调整地图视野层级
+            localSearch.enableAutoViewport(); //允许自动调节窗体大小  启用根据结果自动调整地图层级，当指定了搜索结果所展现的地图时有效
+            ShowClickHandler(0);
+            var gc = new BMap.Geocoder();
+            var glc = new BMap.Geolocation();
+        }
+
+
+        var opts =
+       {
+           width: 250,     // 信息窗口宽度
+           height: 100,     // 信息窗口高度
+           title: "详细信息", // 信息窗口标题
+           enableMessage: true//设置允许信息窗发送短息
+       };
+
+
+        function ShowClickHandler(site_id) {
+            map.clearOverlays();// 清除地图上所有覆盖物
+
+            /*******此处并没有结果,后台没有写LoadMapData这个case********/
+                //site_id为0时是加载地图后并没有点击任何地图菜单结点
+            var parm = "action=LoadMapData" + "&site_id=" + site_id;
+            var datajson = [];
+            getAjax("/home/", parm, function (data) {
+                if (data != "") {
+                    datajson = jQuery.parseJSON( data );
+                }
+            });
+            /************************************************************/
+            for (var i = 0; i < datajson.length; i++) {
+
+                var pt = new BMap.Point(datajson[i].value2, datajson[i].value3);
+                var marker = new BMap.Marker(pt);
+
+                map.addOverlay(marker);          // 将该红色标注添加到地图中
+                // 将标注添加到地图中,为标注添加文本标注
+                marker.setLabel(new BMap.Label(datajson[i].value4, {offset: new BMap.Size(20, -10)}));
+
+                if (site_id != 0) {
+                    map.centerAndZoom(new BMap.Point(datajson[i].value2, datajson[i].value3), 15);//以该点为中心
+                    map.panTo(new BMap.Point(datajson[i].value2, datajson[i].value3));//2秒后，通过改变中心点坐标，地图平移到改动后的中心点
+
+                }
+                //addClickHandler(datajson[i].value_id, marker);  //添加事件监听函数
+            }
+                /*
+            //site_id为0时是加载地图后并没有点击任何地图菜单结点
+            if (site_id == 33 || site_id == 0) {
+
+                var marker1 = new BMap.Marker(new BMap.Point('114.407653', '30.512477'));// 创建标注，即一个红点
+                //var content1 = "丹江口监测站1:" + "</br></br>" + "<a href='../CommonModule/ChartData/realtimeData.aspx'  style='margin-left:5px'>监测实时数据</a><a href='../CommonModule/ChartData/historyData.aspx'  style='margin-left:5px'>实时历史信息</a><a href='../CommonPages/AlarmPage/Alarm.aspx'  style='margin-left:5px'>报警信息</a> ";
+                var content1 = "武汉市监测站:" + "</br></br>" + "<a href='#this'  style='margin-left:5px' onclick='window.parent.FAddTabMenu(61,\"../CommonModule/ChartData/realtimeData.aspx\",\"实时数据监测\",\"\",true)'>监测实时数据</a><a href='#this'  style='margin-left:5px' onclick='window.parent.FAddTabMenu(62,\"../CommonModule/ChartData/historyData.aspx\",\"历史数据监测\",\"\",true)'>监测历史数据</a><a href='#this' onclick='window.parent.FAddTabMenu(64,\"../CommonPages/AlarmPage/Alarm.aspx\",\"报警信息\",\"\",true)'  style='margin-left:5px'>报警信息</a> ";
+
+                //var content1 = "丹江口监测站1:" + "</br></br>" + "<a href='#this'  style='margin-left:5px' onclick='window.parent.test()'>监测实时数据</a><a href='../CommonModule/ChartData/historyData.aspx'  style='margin-left:5px'>实时历史信息</a><a href='../CommonPages/AlarmPage/Alarm.aspx'  style='margin-left:5px'>报警信息</a> ";
+
+                map.addOverlay(marker1);               // 将该红色标注添加到地图中
+                marker1.setLabel(new BMap.Label("武汉市监测站")); //为标注添加文本标注
+                //marker1.setAnimation(BMAP_ANIMATION_BOUNCE); //跳动的动画
+                addClickHandler(content1, marker1);
+
+                if (site_id == 33) {
+                    map.centerAndZoom(new BMap.Point('114.407653', '30.512477'), 15);//以该点为中心
+                    map.panTo(new BMap.Point('114.407653', '30.512477'));//2秒后，通过改变中心点坐标，地图平移到改动后的中心点
+
+                }
+            }
+
+            if (site_id == 35 || site_id == 0) {
+                var marker2 = new BMap.Marker(new BMap.Point('113.002832','28.149366'));
+                var content2 = "长沙市监测站:" + "</br></br>" + "<a href='#this'  style='margin-left:5px' onclick='window.parent.FAddTabMenu(61,\"../CommonModule/ChartData/realtimeData.aspx\",\"实时数据监测\",\"\",true)'>监测实时数据</a><a href='#this'  style='margin-left:5px' onclick='window.parent.FAddTabMenu(62,\"../CommonModule/ChartData/historyData.aspx\",\"历史数据监测\",\"\",true)'>监测历史数据</a><a href='#this' onclick='window.parent.FAddTabMenu(64,\"../CommonPages/AlarmPage/Alarm.aspx\",\"报警信息\",\"\",true)'  style='margin-left:5px'>报警信息</a> ";
+                map.addOverlay(marker2);               // 将标注添加到地图中
+                marker2.setLabel(new BMap.Label("长沙市监测站"));
+                //marker2.setAnimation(BMAP_ANIMATION_BOUNCE); //跳动的动画
+
+                addClickHandler(content2, marker2);
+
+                if (site_id == 35) {
+                    map.centerAndZoom(new BMap.Point('113.002832', '28.149366'), 15);
+                    map.panTo(new BMap.Point('113.002832', '28.149366'));
+                }
+            }
+
+            if (site_id == 38 || site_id == 0) {
+                var marker3 = new BMap.Marker(new BMap.Point('114.325411', '30.630907'));
+                var content3 = "杭州市监测站:" + "</br></br>" + "<a href='#this'  style='margin-left:5px' onclick='window.parent.FAddTabMenu(61,\"../CommonModule/ChartData/realtimeData.aspx\",\"实时数据监测\",\"\",true)'>监测实时数据</a><a href='#this'  style='margin-left:5px' onclick='window.parent.FAddTabMenu(62,\"../CommonModule/ChartData/historyData.aspx\",\"历史数据监测\",\"\",true)'>监测历史数据</a><a href='#this' onclick='window.parent.FAddTabMenu(64,\"../CommonPages/AlarmPage/Alarm.aspx\",\"报警信息\",\"\",true)'  style='margin-left:5px'>报警信息</a> ";
+                map.addOverlay(marker3);               // 将标注添加到地图中
+                marker3.setLabel(new BMap.Label("杭州市监测站"));
+                //marker3.setAnimation(BMAP_ANIMATION_BOUNCE); //跳动的动画
+
+                addClickHandler(content3, marker3);
+
+                if (site_id == 38) {
+                    map.centerAndZoom(new BMap.Point('114.325411', '30.630907'), 15);
+                    map.panTo(new BMap.Point('114.325411', '30.630907'));
+
+                }
+            }
+
+            if (site_id == 39 || site_id == 0) {
+                var marker4 = new BMap.Marker(new BMap.Point('114.358136', '30.525278'));
+                var content4 = "深圳市监测站:" + "</br></br>" + "<a href='#this'  style='margin-left:5px' onclick='window.parent.FAddTabMenu(61,\"../CommonModule/ChartData/realtimeData.aspx\",\"实时数据监测\",\"\",true)'>监测实时数据</a><a href='#this'  style='margin-left:5px' onclick='window.parent.FAddTabMenu(62,\"../CommonModule/ChartData/historyData.aspx\",\"历史数据监测\",\"\",true)'>监测历史数据</a><a href='#this' onclick='window.parent.FAddTabMenu(64,\"../CommonPages/AlarmPage/Alarm.aspx\",\"报警信息\",\"\",true)'  style='margin-left:5px'>报警信息</a> ";
+                map.addOverlay(marker4);               // 将标注添加到地图中
+                marker4.setLabel(new BMap.Label("深圳市监测站"));
+                //marker4.setAnimation(BMAP_ANIMATION_BOUNCE); //跳动的动画
+
+                addClickHandler(content4, marker4);
+
+                if (site_id == 39) {
+                    map.centerAndZoom(new BMap.Point('114.358136', '30.525278'), 15);
+                    map.panTo(new BMap.Point('114.358136', '30.525278'));
+
+                }
+            }
+
+            if (site_id == 0) {
+                map.centerAndZoom("武汉", 12);
+
+            }
+            */
+                //addClickHandler(content1, marker1);
+                //addClickHandler(content2, marker2);
+                //addClickHandler(content3, marker3);
+                //addClickHandler(content4, marker4);
+
+        }
+
+
+
+        function addClickHandler(content, marker) {
+            //marker.addEventListener("click", function (e) {//添加事件监听函数,当点击marke标注时执行openInfo函数
+            //    openInfo(content, e);
+            //}
+            //);
+            marker.addEventListener("click", function () {
+                var point = new BMap.Point(marker.getPosition().lng, marker.getPosition().lat);
+                var infoWindow = new BMap.InfoWindow(content, opts);// 创建一个信息窗实例，其中content支持HTML内容。
+                map.openInfoWindow(infoWindow,point);
+            });
+        }
+
+        function openInfo(content, e) {
+            var p = e.target;//target 事件属性可返回事件的目标节点（触发该事件的节点），如生成事件的元素、文档或窗口。
+            var point = new BMap.Point(p.getPosition().lng, p.getPosition().lat);//获取目标节点即marker的地理位置
+            var infoWindow = new BMap.InfoWindow(content, opts);  // 创建信息窗口对象
+            map.openInfoWindow(infoWindow, point); //开启信息窗口
+        }
+
+    </script>
+</body>
+</html>

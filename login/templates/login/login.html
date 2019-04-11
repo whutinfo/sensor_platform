@@ -1,0 +1,225 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+
+<html lang="en" class="no-js">
+<!--<![endif]-->
+<!-- BEGIN HEAD -->
+<head>
+<meta charset="utf-8"/>
+<title>系统通用平台</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="" name="description"/>
+<meta content="" name="author" />
+<meta name="MobileOptimized" content="320">
+<!-- BEGIN GLOBAL MANDATORY STYLES -->
+<link href="/static/assets/plugins/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+<link href="/static/assets/plugins/bootstrap/css/bootstrap.min.css"  rel="stylesheet" type="text/css"/>
+<link href="/static/assets/plugins/uniform/css/uniform.default.css"  rel="stylesheet" type="text/css"/>
+<!-- END GLOBAL MANDATORY STYLES -->
+<!-- BEGIN PAGE LEVEL STYLES -->
+<link rel="stylesheet" type="text/css" href="/static/assets/plugins/select2/select2_metro.css"/>
+<!-- END PAGE LEVEL SCRIPTS -->
+<!-- BEGIN THEME STYLES -->
+<link href="/static/assets/css/style-metronic.css"  rel="stylesheet" type="text/css"/>
+<link href="/static/assets/css/style.css"  rel="stylesheet" type="text/css"/>
+<link href="/static/assets/css/style-responsive.css"  rel="stylesheet" type="text/css"/>
+<link href="/static/assets/css/plugins.css"  rel="stylesheet" type="text/css"/>
+<link href="/static/assets/css/themes/default.css"  rel="stylesheet" type="text/css" id="style_color"/>
+<link href="/static/assets/css/pages/login-soft.css"  rel="stylesheet" type="text/css"/>
+<link href="/static/assets/css/custom.css"  rel="stylesheet" type="text/css"/>
+<!-- END THEME STYLES -->
+<link rel="shortcut icon" href="/static/assets/favicon.ico"/>
+
+    
+    <script src="/static/Themes/Scripts/jquery-1.8.2.min.js" ></script>
+    <script src="/static/Themes/Scripts/FunctionJS.js" ></script>
+
+
+    <script type="text/javascript">
+      //检查账号密码是否存在
+        function LoginBtn() {
+            var Account = document.getElementById("name").value;
+            var Pwd = document.getElementById("pwd").value;
+
+            if (Account == "" || Account == "账号") {
+
+                alert("登录账户不能为空");
+                document.getElementById("name").focus();
+                return false;
+            } else if (Pwd == "" || Pwd == "密码") {
+
+                alert("登录密码不能为空");
+                document.getElementById("pwd").focus();
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+            /**
+     数据验证完整性
+     **/
+        function CheckUserDataValid() {
+            if (!LoginBtn()) {
+                return false;
+            }
+            else {
+                var Account = document.getElementById("name").value;
+                var Pwd = document.getElementById("pwd").value;
+                $.ajax({
+                    url:'/login/',    //要提交的地址url
+                    type:'POST',       //GET或POST,提交方式
+                    data:{              //要提交的数据
+                        'Account':Account,
+                        'Pwd':Pwd,
+                    },
+                    success:function (res) {
+                        //当前服务端即后台处理完毕后，自动执行的回调函数,
+                        //res  返回的数据，字符串类型
+                        //jQuery.parseJSON(字符串) =>字典/对象
+                        //JSON.stringify(字典/对象)=>字符串
+                        //后台views中json.dumps(字典/对象)=>字符串
+                        //后台views中json.loads(字符串)=>字典/对象
+                        if(jQuery.parseJSON(res)=='3'){
+                            //setInterval(Load, 300);
+                            location.href = '/mainIndex/';
+                        }
+                        else{
+                            alert('账号或密码错误');
+                            //重新输入账号密码
+                            resetInput();
+                        }
+                    }
+                })
+                /*
+                 var parm="Account='"+Account+"'pwd='"+pwd;
+                 getAjax("/login/", parm, function (backstring) {
+                     if(json.parse(res)=='3'){
+                            setInterval(Load, 300);
+                        }
+                        else{
+                            alert('账号或密码错误');
+                            //重新输入账号密码
+                            resetInput();
+                        }
+                     }
+                 })
+                */
+
+            }
+        }
+
+        function Load() {
+            //跳转到主页面
+            window.location.href = '/mainIndex/';//手风琴版风格  必须在最前面加/  否则Url路径会认为是login/mainIndex
+            return false;
+        }
+
+        function resetInput() {
+            document.getElementById("name").value = "";
+            document.getElementById("pwd").value = "";
+            document.getElementById("name").focus();
+        }
+
+
+    </script>
+
+
+</head>
+<!-- END HEAD -->
+<!-- BEGIN BODY -->
+<body class="login">
+<!-- BEGIN LOGO -->
+<div class="logo">
+    <img src="/static/images/sl1.png" />
+</div>
+<!-- END LOGO -->
+<!-- BEGIN LOGIN -->
+<div class="content">
+	<!-- BEGIN LOGIN FORM -->
+	<form class="login-form" action="/login/" method="post">
+		<h3 class="form-title">Login to your account</h3>
+		<div class="alert alert-danger display-hide">
+			<button class="close" data-close="alert"></button>
+			<span>
+				 Enter any username and password.
+			</span>
+		</div>
+		<div class="form-group">
+			<!--ie8, ie9 does not support html5 placeholder, so we just show field title for that-->
+			<label class="control-label visible-ie8 visible-ie9">Username</label>
+			<div class="input-icon">
+				<i class="fa fa-user"></i>
+				  <input  class="form-control placeholder-no-fix"   id="name" type="text"  value="管理员" onblur="if(this.value==''){this.value='账号'}" onfocus="if(this.value=='账号'){this.value=''}"/>
+			</div>
+		</div>
+		<div class="form-group">
+			<label class="control-label visible-ie8 visible-ie9">Password</label>
+			<div class="input-icon">
+				<i class="fa fa-lock"></i>
+				  <input class="form-control placeholder-no-fix" id="pwd" type="text"  value="123" onblur="if(this.value==''){this.value='密码';this.type='text'}" onfocus="if(this.value=='密码'){this.value='';this.type='password'}"/>
+			</div>
+		</div>
+		<div class="form-actions">
+			<label class="checkbox">
+			<input type="checkbox" name="remember" value="1"/> Remember me </label>
+			 <a  class="btn blue btn-sm pull-right"   onclick=" CheckUserDataValid()"><i class="fa fa-share"></i>登陆</a>
+		</div>
+		<div class="forget-password">
+			<h4>Forgot your password ?</h4>
+			<p>
+				 no worries, click here
+				to reset your password.
+			</p>
+		</div>
+		<div class="create-account">
+			<p>
+				 Don't have an account yet ?&nbsp; Create an account
+			</p>
+		</div>
+	</form>
+	
+</div>
+<!-- END LOGIN -->
+<!-- BEGIN COPYRIGHT -->
+<div class="copyright">
+	 版权所有&copy; 武汉森岩科技有限公司 
+</div>
+<!-- END COPYRIGHT -->
+<!-- BEGIN JAVASCRIPTS(Load javascripts at bottom, this will reduce page load time) -->
+<!-- BEGIN CORE PLUGINS -->
+<!--[if lt IE 9]>
+	<script src="/static/assets/plugins/respond.min.js"></script>
+	<script src="/static/assets/plugins/excanvas.min.js"></script>
+	<![endif]-->
+<script src="/static/assets/plugins/jquery-1.10.2.min.js"  type="text/javascript"></script>
+<script src="/static/assets/plugins/jquery-migrate-1.2.1.min.js"  type="text/javascript"></script>
+<script src="/static/assets/plugins/bootstrap/js/bootstrap.min.js"  type="text/javascript"></script>
+<script src="/static/assets/plugins/bootstrap-hover-dropdown/twitter-bootstrap-hover-dropdown.min.js"  type="text/javascript"></script>
+<script src="/static/assets/plugins/jquery-slimscroll/jquery.slimscroll.min.js"  type="text/javascript"></script>
+<script src="/static/assets/plugins/jquery.blockui.min.js" type="text/javascript"></script>
+<script src="/static/assets/plugins/jquery.cokie.min.js"  type="text/javascript"></script>
+<script src="/static/assets/plugins/uniform/jquery.uniform.min.js" type="text/javascript"></script>
+<!-- END CORE PLUGINS -->
+<!-- BEGIN PAGE LEVEL PLUGINS -->
+<script src="/static/assets/plugins/jquery-validation/dist/jquery.validate.min.js" type="text/javascript"></script>
+<script src="/static/assets/plugins/backstretch/jquery.backstretch.min.js" type="text/javascript"></script>
+<script type="text/javascript" src="/static/assets/plugins/select2/select2.min.js"></script>
+<!-- END PAGE LEVEL PLUGINS -->
+<!-- BEGIN PAGE LEVEL SCRIPTS -->
+<script src="/static/assets/scripts/app.js"  type="text/javascript"></script>
+<script src="/static/assets/scripts/login-soft.js"  type="text/javascript"></script>
+<!-- END PAGE LEVEL SCRIPTS -->
+
+<script>
+    jQuery(document).ready(function () {
+        App.init();
+        Login.init();
+    });
+	</script>
+<!-- END JAVASCRIPTS -->
+</body>
+<!-- END BODY -->
+</html>
+

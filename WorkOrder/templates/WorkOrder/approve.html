@@ -1,0 +1,489 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href={% static "Themes/EasyUI/default/easyui.css" %} />
+    <link rel="stylesheet" href={% static "Themes/EasyUI/icon.css" %} />
+    <script src={% static "Themes/EasyUI/jquery.min.js"%}></script>
+    <script src={% static "Themes/EasyUI/jquery.easyui.min.js"%}></script>
+    <script src={% static "Themes/Scripts/FunctionJS.js"%} type="text/javascript"></script>
+
+    <script>
+        $(document).ready(function () {
+            Initgdtype();
+            InitDg1();
+            LoadDg1(0);//一开始就加载所有
+            LoadDataByType();//给下拉菜单框绑定事件，获取类型
+        })
+
+        ////初始化工单类型下拉选项框
+        function Initgdtype() {
+            var datajson = [];
+            var parm = "action=LoadType";
+            getAjax("/approveWork/", parm, function (data) {
+                if (data != "") {
+                    datajson = jQuery.parseJSON(data);
+                }
+            })
+            var LiuchengJson = [];
+            var i = 0;
+
+            $('#gdtype').combobox({
+                data: datajson,
+                valueField: 'type',
+                textField: 'title',
+                showItemIcon: true,
+            })
+        }
+
+
+        //////////////////***************工单信息 初始化 + 加载 *************///////////////////////////
+        function InitDg1() {
+            var datajson = [];
+
+            $("#dg1").datagrid({
+                data: datajson,
+                title: '工单',
+                columns: [[
+                     { field: 'value_id', title: '', checkbox: true, width: "5%" },
+                     {
+                         field: 'value1', title: '工单类型', width: "8%", align: 'center', formatter: function (value, row, index) {
+                             if (value == "10")
+                             {
+                                 return "报修玻璃";
+                             }
+                             else if (value == "11")
+                             {
+                                 return "购买材料";
+                             }
+                             else if (value == "12")
+                             {
+                                 return "请假";
+                             }
+                             else
+                             {
+                                 return "未定义工单";
+                             }
+                         }
+                     },
+                     { field: 'value2', title: '内容', width: "15%", align: 'center' },
+                     { field: 'value3', title: '地点', width: "20%", align: 'center' },
+                     {
+                         field: 'value4', title: '状态', width: "15%", align: 'center', styler: function (value, row) {
+                             if (value == "0" || value == null) {
+                                 return "background: rgba(255, 0, 0, 0.50)";      //红  无效
+                             }
+                             else if (value == "1") {
+                                 return "background: rgba(178, 204, 233, 0.50)";   //浅蓝  未开始
+                             }
+                             else if (value == "2") {
+                                 return "background: rgba(255, 216, 0, 0.50)";     //黄 进行中
+                             }
+                             else {
+                                 return "background: rgba(0, 148, 255, 0.50)";     //蓝 已结束
+                             }
+                         }, formatter: function (value, row, index) {
+                             if (value == "0" || value == null) {
+                                 return "被撤回无效";
+                             }
+                             else if (value == "1") {
+                                 return "待审批";
+                             }
+                             else if (value == "2") {
+                                 return "进行中";
+                             }
+                             else {
+                                 return "已结束";
+                             }
+                         }
+                     },
+               //      { field: 'value4', title: '流程', width: "12%", align: 'center', sortable: true },
+               //      { field: 'value5', title: '备注', width: "15%", align: 'center' },
+                     { field: 'value5', title: '发起人', width: "12%", align: 'center' },
+                     { field: 'value6', title: '发起时间', width: "12%", align: 'center', sortable: true, order: 'desc' },
+                     { field: 'value7', title: '审批人1', width: "12%", align: 'center' },
+                     { field: 'value20', title: '审批人1意见', width: "18%", align: 'center' },
+                     { field: 'value8', title: '审批人2', width: "12%", align: 'center' },
+                     { field: 'value21', title: '审批人2意见', width: "18%", align: 'center' },
+                     { field: 'value9', title: '审批人3', width: "12%", align: 'center' },
+                     { field: 'value22', title: '审批人3意见', width: "18%", align: 'center' }
+                ]],
+                showFooter: true,
+                pagination: true,
+                singleSelect: true,
+                selectOnCheck: true,
+                onClickRow: function (index, row) {
+                    //  LoadDg2(row.value_id);
+                }
+            })
+        }
+
+        /***********加载对应权限可以审批的工单****************/
+        function LoadDg1(type) {
+            var datajson = [];
+            var parm = 'action=LoadData&check_gdtype=' + type;
+            getAjax("/approveWork/", parm, function (backstring) {
+                if (backstring != "") {
+                    datajson = jQuery.parseJSON(backstring);
+                }
+            })
+            $("#dg1").datagrid('loadData', datajson);//加载本地数据，旧的行将被移除
+        }
+
+        function LoadDataByType() {
+            $('#gdtype').combobox({
+                onChange: function () {
+                    var gdtype = $("#gdtype").combobox('getValues');
+                    if ("" != gdtype) {
+                        LoadDg1(gdtype);
+                    }
+                    else {//不选择哪种工单
+                        LoadDg1(0);
+                    }
+                }
+            })
+        }
+
+        //////////////////***************Dlg1_1  工单信息详情查看  *************///////////////////////////
+        function ShowDlg1_1() {
+            var row_slec = $("#dg1").datagrid('getSelected');
+            if (row_slec != null) {
+                var value_id = row_slec.value_id;
+                var step = row_slec.step;
+                var parm = 'action=updateFlag&work_id='+value_id+'&step='+step;//当该审批人查看时，意味着开始审批，其他有许可的人也就不能再显示该工单
+                getAjax("/approveWork/", parm, function (data) {
+
+                })
+
+                $('#dlg1_1').show();
+                $('#dlg1_1').dialog({
+                    title: '工单详情',
+                    width: 700,
+                    height: 400,
+                    closed: false,
+                    shadow: true,
+                    onResize: function () {
+                        $(this).dialog('center');
+                    },
+                    onOpen: function () {
+                        $("#dlg1_1_txt_1").textbox('setValue', row_slec.title);   //工单类型
+                        $("#dlg1_1_txt_2").textbox('setValue', row_slec.value2);   //内容
+                        $("#dlg1_1_txt_3").textbox('setValue', row_slec.value3);   //地点
+                        $("#dlg1_1_txt_4").textbox('setValue', row_slec.value4);   //状态
+                        $("#dlg1_1_txt_5").textbox('setValue', row_slec.value5);   //发起人
+                        $("#dlg1_1_txt_6").textbox('setValue', row_slec.value6);   //发起时间
+                        $("#dlg1_1_txt_7").textbox('setValue', row_slec.value7);   //审批人1
+                        $("#dlg1_1_txt_8").textbox('setValue', row_slec.value20);   //审批人意见
+                        $("#dlg1_1_txt_9").textbox('setValue', row_slec.value8);   //审批人2
+                        $("#dlg1_1_txt_10").textbox('setValue', row_slec.value21);   //审批人意见
+                        $("#dlg1_1_txt_11").textbox('setValue', row_slec.value9);   //审批人3
+                        $("#dlg1_1_txt_12").textbox('setValue', row_slec.value22);   //审批人意见
+
+                        if (row_slec.value4 == "1") {
+                            $("#dlg1_1_txt_4").textbox('setValue', "待审批");   //状态
+                        }
+                        else if (row_slec.value4 == "2") {
+                            $("#dlg1_1_txt_4").textbox('setValue', "进行中");   //状态
+                        }
+                        else if (row_slec.value4 == "3") {
+                            $("#dlg1_1_txt_4").textbox('setValue', "已结束");   //状态
+                        }
+                        else {
+                            $("#dlg1_1_txt_4").textbox('setValue', "被撤回无效");   //状态
+                        }
+                        //      $("#dlg1_1_txt_8").textbox('setValue', row_slec.value9);   //完成时间
+
+                    },
+                    onClose: function () {
+                        LoadDg1(0);
+                    }
+                });
+            }
+            else {
+                alert("勾选要查看的项!");
+            }
+        }
+        //////////////////***************Dlg1_1  工单信息详情查看 结束 *************///////////////////////////
+
+
+        //加载选项框
+        function LoadSelect() {
+            var datajson = [
+                            { "type": 0, "title": "同意", "selected": "true" },
+                            { "type":1, "title": "不同意"}
+                           ];
+         //   var parm = "action=LoadType";
+            //getAjax("approveIndex.ashx", parm, function (data) {
+            //    if (data != "") {
+            //        datajson = eval("(" + data + ")");
+            //    }
+
+            //})
+
+            $('#dlg1_2_txt_1').combobox({
+                data: datajson,
+                valueField: 'type',
+                textField: 'title',
+                showItemIcon: true,
+            })
+        }
+
+        function update(index,step) {
+
+            var approve = $("#dlg1_2_txt_1").combobox('getValues');//是否批准 0同意 1否决
+            var text = $("#dlg1_2_txt_2").textbox('getValue');//审批意见
+            var parm = 'action=updateInfo&approve=' + approve + '&advise='+ text+'&work_id='+index+'&cur_step='+step;
+
+            getAjax("/approveWork/", parm, function (data) {
+                var backstring =jQuery.parseJSON(data);
+                if (backstring == "1") {
+                    $('#dlg1_2').dialog('close');
+                    $('#gdtype').combobox('setValue', '');
+                    LoadDg1(0);
+
+                }
+                else
+                    alert("保存失败");
+            })
+        }
+
+        //审批工单
+        function ShowDlg1_2() {
+            var row_slec = $("#dg1").datagrid('getSelected');
+            if (row_slec != null) {
+                var value_id = row_slec.value_id;
+                var step = row_slec.step;
+                var parm = 'action=updateFlag&work_id='+value_id+'&step='+step;//当该审批人查看时，意味着开始审批，其他有许可的人也就不能再显示该工单
+                getAjax("/approveWork/", parm, function (data) {})
+
+                $('#dlg1_2').show();
+                $('#dlg1_2').dialog({
+                    title: '审批工单',
+                    width: 705,
+                    height: 420,
+                    closed: false,
+                    shadow: true,
+                    onResize: function () {
+                        $(this).dialog('center');
+                    },
+                    onOpen: function () {
+                        LoadSelect();//是否同意
+
+                        $("#dlg1_2_txt_2").textbox('setValue', "");//审批意见
+
+
+                    },
+                    onClose: function () {
+                        LoadDg1(0);
+                        $('#gdtype').combobox('setValue', '');
+                    },
+                    buttons:    //        '#dlg1_2-buttons1_add',
+                    [{
+                        text:'保存',
+                        handler:function()
+                        {
+                            update(row_slec.value_id,row_slec.step);//工单suoyin
+                        }
+                    },{
+                        text:'关闭',
+                        handler:function()
+                        {
+                            $('#dlg1_2').dialog('close');
+                            LoadDg1(0);
+                        }
+                    }]
+
+                });
+            }
+            else {
+                alert("勾选要审批的工单!");
+            }
+        }
+
+
+
+    </script>
+
+
+
+    <style>
+        .datagrid-row-selected
+        {
+            background: rgba(178, 204, 233, 0.50);
+        }
+
+        .body
+        {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="easyui-layout" style="width: 100%; height: 100%">>
+    <div data-options="region:'center'," style="height: 100%">
+         <div id="toolbar1" style="padding: 2px 5px;">
+
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-reload'" onclick="Refresh()" >刷新</a>
+             <span >工单类型:</span>
+                 <input id="gdtype" name="type" value="" class="easyui-combobox"/>
+            <a href="javascript:void(0)" class="easyui-linkbutton"  data-options="plain:true,iconCls:'icon-ok'" onclick="ShowDlg1_2();">审批工单</a>
+
+            <!--a href="javascript:void(0)" class="easyui-linkbutton"data-options="plain:true,iconCls:'icon-remove'" onclick="delet();">删除工单</a-->
+           <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-search'" onclick="ShowDlg1_1();">查看详情</a>
+
+         </div>
+         <table id="dg1" class="easyui-datagrid" style="width: 99%; height: 95%">
+         </table>
+
+    <!--查看工单详情-->
+    <div id="dlg1_1" style="display: none;">
+        <div style="padding-top: 10px; padding-left: 20px;">
+            <table>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">工单类型:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_1" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">内容:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_2" style="width: 500px;height:70px" readonly="true" data-options="multiline:true" >
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">地点:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_3" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">状态:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_4" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">发起人:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_5" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">发起时间:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_6" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">审批人1:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_7" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">审批人1意见:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_8" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">审批人2:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_9" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">审批人2意见:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_10" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                   <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">审批人3:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_11" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">审批人3意见:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_12" style="width: 500px;" readonly="true">
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!--审批工单-->
+    <div id="dlg1_2" style="display: none;">
+        <div style="padding-top: 5px; padding-left: 5px; padding-right: 5px;">
+            <div class="easyui-panel" style="padding-top: 4px; padding-left: 20px; width: 680px; height: 400px;">
+                <table>
+                    <tr>
+                        <td style="padding-top: 4px;">
+                            <span style="padding: 0px 0px 0px 25px;">是否同意:</span>
+                        </td>
+                        <td style="padding-top: 4px;">
+                            <input class="easyui-combobox" id="dlg1_2_txt_1" style="width: 550px"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 4px;">
+                            <span style="padding: 0px 0px 0px 25px;">审批意见:</span>
+                        </td>
+                        <td style="padding-top: 4px;">
+                            <input class="easyui-textbox" id="dlg1_2_txt_2" style="width: 550px;height:100px" data-options="multiline:true"/>
+                        </td>
+                    </tr>
+
+                </table>
+            </div>
+            <div id="dlg1_2-buttons1_add" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="update(row_slec)">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg1_2').dialog('close')">取消</a>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+    <script type="text/javascript">
+        function Refresh() {
+            var gdtype = $("#gdtype").combobox('getValues');
+            if ("" != gdtype) {
+                LoadDg1(gdtype);
+            }
+            else {//不选择哪种工单
+                LoadDg1(0);
+            }
+        }
+
+    </script>
+</html>
+

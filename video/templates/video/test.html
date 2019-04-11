@@ -1,0 +1,437 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head  runat="server">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+    <link rel="stylesheet" href={% static "Themes/EasyUI/default/easyui.css" %} />
+    <link rel="stylesheet" href={% static "Themes/EasyUI/icon.css" %} />
+    <script src={% static "Themes/EasyUI/jquery.min.js" %}></script>
+    <script src={% static "Themes/EasyUI/jquery.easyui.min.js" %}></script>
+    <script src={% static "Themes/Scripts/FunctionJS.js" %} type="text/javascript"></script>
+</head>
+     <script>
+         $(document).ready(function () {
+             //InitDg1();
+             LoadDg1();//一开始就加载所有
+
+         })
+         /*    该函数不管！    */
+         //////////////////***************生产厂商信息 初始化 + 加载 *************///////////////////////////
+         function InitDg1() {
+             var datajson = [];
+             var columns_json = [];
+             var parm = 'action=columns';
+             //getAjax 第一个参数是Url 做相应的 更改
+             getAjax("/videoSettings/", parm, function (backstring) {
+                 if (backstring != "") {
+                     columns_json = jQuery.parseJSON(backstring);
+                 }
+             })
+             $("#dg1").datagrid({
+                 data: datajson,
+                 title: '生产厂商信息',
+                /* columns: [[
+                      { field: 'CK', title: '', checkbox: true, width: "5%" },
+                      { field: 'value1', title: '生产厂商名称', width: "18%", align: 'center' },
+                      { field: 'value2', title: '负责人姓名', width: "10%", align: 'center' },
+                      { field: 'value3', title: '负责人手机号', width: "12%", align: 'center' },
+                      { field: 'value4', title: '联系地址', width: "20%", align: 'center' },
+
+                 ]],*/
+                 columns: [columns_json],  //格式必须是 [[{},{},{}]]  所以json外面还要套一个中括号[]
+                 showFooter: true,
+                 pagination: true,
+                 singleSelect: true,
+                 selectOnCheck: true,
+                 onClickRow: function (index, row) {
+                 }
+             })
+         }
+         /*    该函数不管！    */
+
+         /***********加载本地生产厂商信息数据****************/
+         function LoadDg1() {
+             var datajson = [];
+             var parm = 'action=LoadData';
+              //  后台用request.POST.get()方式获取时  是根据字符串里面的名称获取的，与上面的变量名无关
+             //  如：  request.POST.get('action')  后台获取的就是action对应的值即Save 参数至少必须得有action参数
+
+                /* user code begin */
+                     //getAjax 第一个参数是Url 做相应的 更改
+             getAjax("/videoSettings/", parm, function (backstring) {
+
+                 /* user code end */
+                 if (backstring != "") {
+                     datajson = jQuery.parseJSON(backstring);
+                 }
+             })
+             $("#dg1").datagrid('loadData', datajson);//加载本地数据，旧的行将被移除
+
+         }
+         /******************加载结束***********************/
+        /******************建立节点***********************/
+         function ShowDlg1_3() {
+             $('#dlg1_3').show();
+             $('#dlg1_3').dialog({
+                 /* user code begin */
+                 title: '新增节点', //title按需求更改，即新建时弹框显示的名称
+                 /* user code end */
+                 width: 705,
+                 height: 420,
+                 closed: false,
+                 shadow: true,
+                 onResize: function () {
+                     $(this).dialog('center');
+                 },
+                 onOpen: function () {
+                     /* user code begin */
+                     //按你新增时的个数依次增加或减少 只需改最后一位数字
+                     //如果有下拉框  需要做加载下拉框内容的处理 此处没有下拉框  需要下拉框可以看WorkOrder工单的新增信息时下拉框的处理
+                     $("#dlg1_3_txt_1").textbox('setValue', "");
+                     $("#dlg1_3_txt_2").textbox('setValue', "");
+                     $("#dlg1_3_txt_3").textbox('setValue', "");
+                    //  $("#dlg1_2_txt_4").textbox('setValue', "");
+                    //  $("#dlg1_2_txt_5").textbox('setValue', "");
+                    //  $("#dlg1_2_txt_6").textbox('setValue', "");
+                    //  $("#dlg1_2_txt_7").textbox('setValue', "");
+                    //  $("#dlg1_2_txt_8").textbox('setValue', "");
+
+                    /* user code begin */
+                 },
+                 onClose: function () {
+                     LoadDg1();
+
+                 },
+                 buttons: '#dlg1_2-buttons1_add',
+
+             });
+         }
+
+         /****************新建生产厂商*****************/
+         function ShowDlg1_2() {
+             $('#dlg1_2').show();
+             $('#dlg1_2').dialog({
+                 /* user code begin */
+                 title: '新增视频配置', //title按需求更改，即新建时弹框显示的名称
+                 /* user code end */
+                 width: 705,
+                 height: 420,
+                 closed: false,
+                 shadow: true,
+                 onResize: function () {
+                     $(this).dialog('center');
+                 },
+                 onOpen: function () {
+                     /* user code begin */
+                     //按你新增时的个数依次增加或减少 只需改最后一位数字
+                     //如果有下拉框  需要做加载下拉框内容的处理 此处没有下拉框  需要下拉框可以看WorkOrder工单的新增信息时下拉框的处理
+                     $("#dlg1_2_txt_1").textbox('setValue', "");
+                     $("#dlg1_2_txt_2").textbox('setValue', "");
+                     $("#dlg1_2_txt_3").textbox('setValue', "");
+                     $("#dlg1_2_txt_4").textbox('setValue', "");
+                     $("#dlg1_2_txt_5").textbox('setValue', "");
+                     $("#dlg1_2_txt_6").textbox('setValue', "");
+                     $("#dlg1_2_txt_7").textbox('setValue', "");
+                     $("#dlg1_2_txt_8").textbox('setValue', "");
+
+                    /* user code begin */
+                 },
+                 onClose: function () {
+                     LoadDg1();
+
+                 },
+                 buttons: '#dlg1_2-buttons1_add',
+
+             });
+         }
+
+
+         //////*******************保存生产厂商信息**************************/
+         function save() {
+                 /* user code begin */
+
+             //变量名与下面Html的新增信息的排序相对应
+             var id = $("#dlg1_2_txt_1").textbox('getValue');
+             var ip = $("#dlg1_2_txt_2").textbox('getValue');
+             var port = $("#dlg1_2_txt_3").textbox('getValue');
+             var name = $("#dlg1_2_txt_4").textbox('getValue');
+             var pwd = $("#dlg1_2_txt_5").textbox('getValue');
+             var rtsp_port = $("#dlg1_2_txt_6").textbox('getValue');
+             var stream_type = $("#dlg1_2_txt_7").textbox('getValue');
+             var device_port = $("#dlg1_2_txt_8").textbox('getValue');
+             //  后台用request.POST.get()方式获取时  是根据字符串里面的名称获取的，与上面的变量名无关
+             //  如：  request.POST.get('action')  后台获取的就是action对应的值即Save
+             var parm = 'action=Save&id=' + id + '&ip=' + ip + '&port=' + port + '&name=' + name+ '&pwd=' + pwd+ '&rtsp_port=' + rtsp_port+ '&stream_type=' + stream_type+ '&device_port=' + device_port;
+
+                //getAjax 第一个参数是Url 做相应的 更改
+             getAjax("/videoSettings/", parm, function (data) {
+
+                 /* user code end */
+
+                 var backstring = jQuery.parseJSON(data);
+                 if (backstring == "1") {
+                     $('#dlg1_2').dialog('close');
+
+                     LoadDg1();
+
+                 }
+                 else
+                     alert("保存失败");
+             })
+         }
+
+         /*************新建结束*****************/
+
+
+         //////////////////***************Dlg1_1  详情查看  *************///////////////////////////
+         function ShowDlg1_1() {
+             var row_slec = $("#dg1").datagrid('getSelected');
+             if (row_slec != null) {
+                 var value_id = row_slec.value0;///索引号
+
+                 $('#dlg1_1').show();
+                 $('#dlg1_1').dialog({
+                     /* user code begin */
+
+                     title: '视频设备详情', //title依需求更改  详情查看的弹框显示的名称
+
+                     /* user code end */
+                     width: 700,
+                     height: 400,
+                     closed: false,
+                     shadow: true,
+                     onResize: function () {
+                         $(this).dialog('center');
+                     },
+                     onOpen: function () {
+                         /* user code begin */
+
+                         //按你新增时的个数依次增加或减少 只需改dlg1_1_txt_1最后一位数字 和相应的value1的最后一位
+                         $("#dlg1_1_txt_1").textbox('setValue', row_slec.value1);
+                         $("#dlg1_1_txt_2").textbox('setValue', row_slec.value2);
+                         $("#dlg1_1_txt_3").textbox('setValue', row_slec.value3);
+                         $("#dlg1_1_txt_4").textbox('setValue', row_slec.value4);
+                         $("#dlg1_1_txt_5").textbox('setValue', row_slec.value5);
+                         $("#dlg1_1_txt_6").textbox('setValue', row_slec.value6);
+                         $("#dlg1_1_txt_7").textbox('setValue', row_slec.value7);
+                         $("#dlg1_1_txt_8").textbox('setValue', row_slec.value8);
+
+                        /* user code end */
+                     },
+                     onClose: function () {
+                         LoadDg1(0);
+                     }
+                 });
+             }
+             else {
+                 alert("勾选要查看的项!");
+             }
+         }
+         //////////////////***************Dlg1_1  工单信息详情查看 结束 *************///////////////////////////
+
+
+
+     </script>
+
+
+
+     <style>
+
+        .datagrid-row-selected
+        {
+            background: rgba(178, 204, 233, 0.50);
+        }
+
+        .body
+        {
+            overflow: hidden;
+        }
+    </style>
+
+
+
+<body class="easyui-layout" style="width: 100%; height: 100%">>
+    <div data-options="region:'center'," style="height: 100%">
+         <div id="toolbar1" style="padding: 2px 5px;">
+                                                                                            <!-- 中间内容可以随页面做更改 新增XXXX信息  等-->
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-reload'" onclick=" LoadDg1();" >刷新</a>
+
+            <a href="javascript:void(0)" class="easyui-linkbutton"  data-options="plain:true,iconCls:'icon-add'" onclick="ShowDlg1_2();">新增视频设备信息</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton"  data-options="plain:true,iconCls:'icon-add'" onclick="ShowDlg1_3();">新增加节点信息</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton"data-options="plain:true,iconCls:'icon-edit'" onclick="edit();">编辑视频设备信息</a>
+           <a href="javascript:void(0)" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-search'" onclick="ShowDlg1_1();">查看详情</a>
+
+         </div>                <!-- 按需求更改Title名   即页面展示表格时的展示名-->
+         <table id="dg1" title="视频配置信息" class="easyui-datagrid" data-options="" style="width: 99%; height: 95%;"
+            showFooter="true" pagination="true" singleSelect="true" selectOnCheck="true">
+              <thead>
+                <tr>
+                    <th data-options="field:'ck',checkbox:true"></th>
+                    {% for i in info_dict %}
+                        {% if i.field != 'value0' %}
+                            <th field={{ i.field }} width={{ i.width }} align={{ i.align }}>{{ i.title }}</th>
+                        {% endif %}
+                    {% endfor %}
+
+                </tr>
+              </thead>
+         </table>
+
+    <!--查看生产厂商详情-->
+    <div id="dlg1_1" style="display: none;">
+        <div style="padding-top: 10px; padding-left: 20px;">
+            <table>
+                <tr>
+                    <td style="padding-top: 4px;">     <!-- 按需求更改下面中间内容  即新增信息时展示输入框前的提示名 从上到下按你想要的顺序改-->
+                        <span style="padding: 0px 0px 0px 25px;">id:</span>
+                    </td>
+                    <td style="padding-top: 4px;"> <!-- 当前是查看框   不管class   不做class修改！！！ -->
+                        <input class="easyui-textbox" id="dlg1_1_txt_1" style="width: 500px;" readonly="true"/>
+                    </td>                   <!-- 按顺序添加或删减成自己想要的个数 将id="dlg1_1_txt_1" 按顺序依次写序号 只改最后的数字 -->
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">ip:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_2" style="width: 500px;" readonly="true"/>
+                    </td>
+                </tr>
+                 <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">端口号:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_3" style="width: 500px;" readonly="true"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">用户名:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_1_txt_4" style="width: 500px;" readonly="true"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">     <!-- 按需求更改下面中间内容  即新增信息时展示输入框前的提示名 从上到下按你想要的顺序改-->
+                        <span style="padding: 0px 0px 0px 25px;">密码:</span>
+                    </td>
+                    <td style="padding-top: 4px;"> <!-- 当前是查看框   不管class   不做class修改！！！ -->
+                        <input class="easyui-textbox" id="dlg1_1_txt_1" style="width: 500px;" readonly="true"/>
+                    </td>                   <!-- 按顺序添加或删减成自己想要的个数 将id="dlg1_1_txt_1" 按顺序依次写序号 只改最后的数字 -->
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">     <!-- 按需求更改下面中间内容  即新增信息时展示输入框前的提示名 从上到下按你想要的顺序改-->
+                        <span style="padding: 0px 0px 0px 25px;">rtsp端口:</span>
+                    </td>
+                    <td style="padding-top: 4px;"> <!-- 当前是查看框   不管class   不做class修改！！！ -->
+                        <input class="easyui-textbox" id="dlg1_1_txt_1" style="width: 500px;" readonly="true"/>
+                    </td>                   <!-- 按顺序添加或删减成自己想要的个数 将id="dlg1_1_txt_1" 按顺序依次写序号 只改最后的数字 -->
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">     <!-- 按需求更改下面中间内容  即新增信息时展示输入框前的提示名 从上到下按你想要的顺序改-->
+                        <span style="padding: 0px 0px 0px 25px;">码流类型:</span>
+                    </td>
+                    <td style="padding-top: 4px;"> <!-- 当前是查看框   不管class   不做class修改！！！ -->
+                        <input class="easyui-textbox" id="dlg1_1_txt_1" style="width: 500px;" readonly="true"/>
+                    </td>                   <!-- 按顺序添加或删减成自己想要的个数 将id="dlg1_1_txt_1" 按顺序依次写序号 只改最后的数字 -->
+                </tr>
+                <tr>
+                    <td style="padding-top: 4px;">     <!-- 按需求更改下面中间内容  即新增信息时展示输入框前的提示名 从上到下按你想要的顺序改-->
+                        <span style="padding: 0px 0px 0px 25px;">设备端口:</span>
+                    </td>
+                    <td style="padding-top: 4px;"> <!-- 当前是查看框   不管class   不做class修改！！！ -->
+                        <input class="easyui-textbox" id="dlg1_1_txt_1" style="width: 500px;" readonly="true"/>
+                    </td>                   <!-- 按顺序添加或删减成自己想要的个数 将id="dlg1_1_txt_1" 按顺序依次写序号 只改最后的数字 -->
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!--创建生产厂家-->
+    <div id="dlg1_2" style="display: none;">
+        <div style="padding-top: 5px; padding-left: 5px; padding-right: 5px;">
+            <div class="easyui-panel" style="padding-top: 4px; padding-left: 20px; width: 680px; height: 400px;">
+                <table>
+                    <tr>
+                        <td style="padding-top: 4px;"> <!-- 按需求更改下面中间内容   即新增信息时展示输入框前的提示名 从上到下按你想要的顺序改-->
+                            <span style="padding: 0px 0px 0px 25px;">id:</span>
+                        </td>
+                        <td style="padding-top: 4px;">  <!-- 按需求更改class 类型  是文本框easyui-textbox  还是下拉框easyui-combobox 还是日历easyui-datebox-->
+                            <input class="easyui-textbox" id="dlg1_2_txt_1" style="width: 500px;" />
+                        </td>  <!-- 按顺序添加或删减成自己想要的个数 将id="dlg1_2_txt_1" 按顺序依次写序号 只改最后的数字 -->
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 4px;">
+                            <span style="padding: 0px 0px 0px 25px;">ip:</span>
+                        </td>
+                        <td style="padding-top: 4px;">
+                            <input class="easyui-textbox" id="dlg1_2_txt_2" style="width: 500px;" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 4px;">
+                            <span style="padding: 0px 0px 0px 25px;">端口号:</span>
+                        </td>
+                        <td style="padding-top: 4px;">
+                            <input class="easyui-textbox" id="dlg1_2_txt_3" style="width: 500px;"/>
+                        </td>
+                    </tr>
+                    <tr>
+                    <td style="padding-top: 4px;">
+                        <span style="padding: 0px 0px 0px 25px;">用户名:</span>
+                    </td>
+                    <td style="padding-top: 4px;">
+                        <input class="easyui-textbox" id="dlg1_2_txt_4" style="width: 500px;"/>
+                    </td>
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 4px;"> <!-- 按需求更改下面中间内容   即新增信息时展示输入框前的提示名 从上到下按你想要的顺序改-->
+                            <span style="padding: 0px 0px 0px 25px;">密码:</span>
+                        </td>
+                        <td style="padding-top: 4px;">  <!-- 按需求更改class 类型  是文本框easyui-textbox  还是下拉框easyui-combobox 还是日历easyui-datebox-->
+                            <input class="easyui-textbox" id="dlg1_2_txt_1" style="width: 500px;" />
+                        </td>  <!-- 按顺序添加或删减成自己想要的个数 将id="dlg1_2_txt_1" 按顺序依次写序号 只改最后的数字 -->
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 4px;"> <!-- 按需求更改下面中间内容   即新增信息时展示输入框前的提示名 从上到下按你想要的顺序改-->
+                            <span style="padding: 0px 0px 0px 25px;">rtsp端口:</span>
+                        </td>
+                        <td style="padding-top: 4px;">  <!-- 按需求更改class 类型  是文本框easyui-textbox  还是下拉框easyui-combobox 还是日历easyui-datebox-->
+                            <input class="easyui-textbox" id="dlg1_2_txt_1" style="width: 500px;" />
+                        </td>  <!-- 按顺序添加或删减成自己想要的个数 将id="dlg1_2_txt_1" 按顺序依次写序号 只改最后的数字 -->
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 4px;"> <!-- 按需求更改下面中间内容   即新增信息时展示输入框前的提示名 从上到下按你想要的顺序改-->
+                            <span style="padding: 0px 0px 0px 25px;">码流类型:</span>
+                        </td>
+                        <td style="padding-top: 4px;">  <!-- 按需求更改class 类型  是文本框easyui-textbox  还是下拉框easyui-combobox 还是日历easyui-datebox-->
+                            <input class="easyui-textbox" id="dlg1_2_txt_1" style="width: 500px;" />
+                        </td>  <!-- 按顺序添加或删减成自己想要的个数 将id="dlg1_2_txt_1" 按顺序依次写序号 只改最后的数字 -->
+                    </tr>
+                    <tr>
+                        <td style="padding-top: 4px;"> <!-- 按需求更改下面中间内容   即新增信息时展示输入框前的提示名 从上到下按你想要的顺序改-->
+                            <span style="padding: 0px 0px 0px 25px;">设备端口:</span>
+                        </td>
+                        <td style="padding-top: 4px;">  <!-- 按需求更改class 类型  是文本框easyui-textbox  还是下拉框easyui-combobox 还是日历easyui-datebox-->
+                            <input class="easyui-textbox" id="dlg1_2_txt_1" style="width: 500px;" />
+                        </td>  <!-- 按顺序添加或删减成自己想要的个数 将id="dlg1_2_txt_1" 按顺序依次写序号 只改最后的数字 -->
+                    </tr>
+
+                </table>
+            </div>
+            <div id="dlg1_2-buttons1_add" style="display: none;">
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="save()">确定</a>
+            <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg1_2').dialog('close')">取消</a>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+
+</html>

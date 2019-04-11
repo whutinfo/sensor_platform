@@ -1,0 +1,515 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+
+    <link rel="stylesheet" href={% static "Themes/EasyUI/default/easyui.css" %} />
+    <link rel="stylesheet" href={% static "Themes/EasyUI/icon.css" %} />
+    <script src={% static "Themes/EasyUI/jquery.min.js"%}></script>
+    <script src={% static "Themes/EasyUI/jquery.easyui.min.js"%}></script>
+    <script src={% static "Themes/Scripts/FunctionJS.js"%} type="text/javascript"></script>
+    <script>
+/************      只做了新增       *****************/
+        $(function () {
+            LoadTree();
+            LoadData(0);
+
+        })
+
+        function dialog_refresh() {
+            LoadTree();
+            LoadData(0);
+        }
+
+
+        function LoadTree() {
+            var treejson = [];
+            var parm = "action=LoadTree";
+            getAjax("/menu/", parm, function (data) {
+                treejson = jQuery.parseJSON(data);
+            })
+            $("#tre").tree({
+                data: treejson,
+                onlyLeafCheck: true,
+                checkbox: false,
+
+                onClick: function (node) {
+
+                    var menu_id = node.id;
+                    LoadData(menu_id);
+
+
+                }
+            })
+        }
+
+
+        function LoadData(id) {
+            var dataJson;
+            var parm = "action=LoadMenu&menu_id=" + id;
+            getAjax("/menu/", parm, function (data) {
+                dataJson = jQuery.parseJSON(data);
+            })
+
+            $("#tg").datagrid({
+                data: dataJson,
+                idField: 'id',
+                treeField: 'rfid',
+                columns: [[
+                    //{ field: 'CK', title: '', checkbox: true, width: "10%" },
+                    { title: "菜单名称", field: "name", width: "15%" },
+                    { title: "菜单描述", field: "describe", width: "18%" },
+                    { title: "跳转页面", field: "url", width: "18%" },
+                    { title: "菜单图标", field: "img", width: "18%" },
+                    { title: "显示菜单", field: "show", width: "10%" },
+                  //  { title: "菜单备注", field: "remark", width: "20%" }
+                ]],
+                rownumbers: true,
+                singleSelect: true,
+                checkOnSelect: true,
+                toolbar: '#tb'
+
+            })
+
+        }
+
+        function alertwarn(content) {
+            content = "<p style='text-align:center'>" + content + "</p>";
+
+            $('#dlg_warn').show();
+            $('#dlg_warn').dialog({
+                title: '警告',
+                width: 250,
+                height: 100,
+                onResize: function () {
+                    $(this).dialog('center');
+                },
+                shadow: true,
+                content: content
+            });
+        }
+
+        /***    新增菜单    初始化下拉选项框****/
+        function InitCombox(index) {
+            var datajson1 = [];
+
+            getAjax("/menu/", "action=LoadSelectMenu", function (data) {
+                if (data != "") {
+                    datajson1 = jQuery.parseJSON(data);
+                }
+            });
+            if (index == 1) {
+                datajson1.unshift({ 'id': 0, 'name': '新父菜单' });
+                $("#info2").combobox('loadData', datajson1);
+            }
+            else {
+                datajson1.unshift({ 'id': 0, 'name': '新父菜单' });
+                $("#info22").combobox('loadData', datajson1);
+            }
+        }
+        /*****   显示对话框****/
+        function showDlg_add() {
+
+                $('#dlg_task_add').show();
+                $('#dlg_task_add').dialog({
+                    title: "添加菜单",
+                    width: 420,
+                    height: 350,
+                    iconCls: 'icon-add',
+                    buttons: '#dlg_task_add_btn',
+                    model: true,
+                    shadow: true,
+                    onResize: function () {
+                        $(this).dialog('center')
+                    },
+                    onOpen: function () {
+
+                        InitCombox(1);
+                        $("#info2").combobox('setValue', 0);
+                        $('#info1').textbox('clear');
+                        $('#info3').textbox('clear');
+                        $('#info4').textbox('clear');
+                        $('#info7').textbox('clear');
+                        $('#info8').textbox('clear');
+                      //  $('#info9').textbox('clear');
+
+                    }
+                });
+        }
+        /***     保存菜单      ***/
+        function task_add() {
+            var menu_name = $('#info1').textbox('getText');
+            var pmenu_id = $('#info2').combobox('getValue');//父级菜单
+            var menu_url = $('#info3').textbox('getText');
+            var menu_show = $('#info4').combobox('getValue');
+            var menu_img = $('#info7').textbox('getText');
+            var menu_describe = $('#info8').textbox('getText')
+
+            var dataJson3;
+            var parm = "action=addMenu&menu_name=" + menu_name + "&pmenu_id=" + pmenu_id + "&menu_url=" + menu_url + "&menu_show=" + menu_show + "&menu_img=" + menu_img + "&menu_describe=" + menu_describe ;
+            getAjax("/menu/", parm, function (data) {
+                dataJson3 = jQuery.parseJSON(data);
+            })
+            var content = "";
+            if (dataJson3 == '1') {
+                content = "<p style='text-align:center'>添加任务成功！</p>";
+            }
+            else {
+                content = "<p style='text-align:center'>添加任务失败！</p>";
+            }
+            $('#dlg_warn').show();
+            $('#dlg_warn').dialog({
+                title: '通知',
+                width: 250,
+                height: 140,
+                onResize: function () {
+                    $(this).dialog('center');
+                },
+                shadow: true,
+                content: content,
+                buttons: [{
+                    text: '确定',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        $('#dlg_warn').dialog('close');
+                    }
+                }],
+                onClose: function () {
+                    //关闭添加的dlg
+                    $('#dlg_task_add').dialog('close');
+                    if (dataJson3 == "1") {
+                        LoadData(0);
+                        LoadTree();
+                    }
+                }
+            });
+        }
+       /***     新增菜单结束    ***/
+        function initdlg() {
+            var datajson = [];
+            var selects = $('#tre').tree('getSelected');
+            var menu_id = selects.id;
+            var parm = "action=LoadMenu&menu_id=" + menu_id;
+            getAjax("/menu/", parm, function (data) {
+                if (data != "") {
+                    datajson = eval("(" + data + ")");
+                }
+            });
+            if (datajson.length != 0) {
+                //for (i = 0; i < datajson.length ; i++)
+                //{
+                //    if (datajson[0].node.length == 4) {
+                //        InitCombox(2);
+                //        $("#info22").combobox('setValue', 0);
+                //    }
+                //    else
+                //    {
+                //        InitCombox(2);
+
+                //        $('#info22').combobox('setValue', datajson[0].id);
+                //    }
+
+                }
+                $('#info12').textbox('setText', datajson[0].name);
+                $('#info32').textbox('setText', datajson[0].url);
+
+                $('#info42').combobox('setValue', datajson[0].show);
+
+                $('#info72').textbox('setText', datajson[0].img);
+                $('#info82').textbox('setText', datajson[0].describe);
+              //  $('#info92').textbox('setText', datajson[0].remark);
+
+            }
+
+        function showDlg_edit() {
+            var selects = $('#tre').tree('getSelected');
+
+            if (selects==null) {
+                alertwarn("未选中编辑项！");
+            }
+            else {
+                var menu_id = selects.id;
+                $('#dlg_task_edit').show();
+                $('#dlg_task_edit').dialog({
+                    title: "编辑菜单",
+                    width: 420,
+                    height: 320,
+                    iconCls: 'icon-edit',
+                    buttons: '#dlg_task_edit_btn',
+                    model: true,
+                    shadow: true,
+                    onResize: function () {
+                        $(this).dialog('center');
+                    },
+                    onOpen: function () {
+                        InitCombox(2);
+                        initdlg();
+                    }
+                });
+            }
+
+        }
+
+        function task_edit() {
+
+            var selects = $('#tre').tree('getSelected');
+            var menu_id = selects.id;
+
+            var menu_name = $('#info12').textbox('getText');
+            //var per_menu = $('#info22').combobox('getText');
+            var menu_url = $('#info32').textbox('getText');
+            var menu_show = $('#info42').combobox('getValue');
+            var menu_img = $('#info72').textbox('getText');
+            var menu_describe = $('#info82').textbox('getText');
+          //  var menu_remark = $('#info92').textbox('getText');
+
+            var dataJson3;
+
+            var parm = "action=editMenu&menu_name=" + menu_name + "&menu_url=" + menu_url + "&menu_show=" + menu_show + "&menu_img=" + menu_img + "&menu_describe=" + menu_describe +  "&menu_id=" + menu_id;
+            getAjax("/menu/", parm, function (data) {
+                dataJson3 =  data ;
+
+            })
+
+                var content = "";
+                if (dataJson3 == '1') {
+                    content = "<p style='text-align:center'>编辑任务成功！</p>";
+                }
+                else {
+                    content = "<p style='text-align:center'>编辑任务失败！</p>";
+                }
+                $('#dlg_warn').show();
+                $('#dlg_warn').dialog({
+                    title: '通知',
+                    width: 250,
+                    height: 140,
+                    onResize: function () {
+                        $(this).dialog('center');
+                    },
+                    shadow: true,
+                    content: content,
+                    buttons: [{
+                        text: '确定',
+                        iconCls: 'icon-ok',
+                        handler: function () {
+                            $('#dlg_warn').dialog('close');
+                        }
+                    }],
+                    onClose: function () {
+                        //关闭添加的dlg
+                        $('#dlg_task_edit').dialog('close');
+                        if (dataJson3 == "1") {
+                            LoadData(0);
+                            LoadTree();
+
+                        }
+                    }
+                });
+
+            }
+
+        function dialog_delete() {
+
+            //var row = $('#tg').datagrid('getSelected');
+            var row = $('#tre').tree('getSelected');
+
+            if (row) {
+                var menu_id = row.id;
+                var dataJson5;
+                var parm = "action=deleteMenu&menu_id=" + menu_id;
+                getAjax("indexdata.ashx", parm, function (data) {
+                    dataJson5 = eval("(" + data + ")");
+                })
+
+                if (dataJson5 == 1) {
+                    alert("删除成功！");
+                    LoadData(0);
+                    LoadTree();
+                }
+
+
+            }
+            else {
+                alert("请选中某一行！");
+
+            }
+
+        }
+
+        </script>
+
+
+
+
+
+
+</head>
+<body class="easyui-layout" style="width: 100%; height: 100%">
+
+    <div data-options="region:'west',split:true,title:'菜单节点'" style="width: 200px; padding: 1px 2px 2px 2px;">
+         <a class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true"  onclick="showDlg_add()">增加</a>
+<!--        <a class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="dialog_delete()">删除</a>-->
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-edit',plain:true" onclick="showDlg_edit();">编辑</a>
+        <a class="easyui-linkbutton" data-options="iconCls:'icon-reload',plain:true" onclick="dialog_refresh();">刷新</a>
+
+        <ul id="tre" class="easyui-tree">
+        </ul>
+    </div>
+
+
+    <div data-options="region:'center',title:'菜单列表'" style="height: 100%">
+         <table id="tg" class="easyui-datagrid" style="width: 99%; height: 99%">
+         </table>
+
+
+  <div id="dlg_task_add" style="display: none; overflow: hidden; padding: 10px 0px 0px 20px;">
+        <table>
+            <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单名称：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                    <input  id ="info1"  class="easyui-textbox"  style="width:200px"/>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 父级菜单：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <select id="info2" class="easyui-combobox" data-options=" valueField: 'id',textField: 'name',panelHeight:'auto'" style="width:203px">
+
+                   </select>
+                </td>
+            </tr>
+                <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单跳转：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info3" class="easyui-textbox"  style="width:200px"/>
+                </td>
+            </tr>
+
+             <tr>
+             <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;">是否显示：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <select id="info4" class="easyui-combobox" style="width:203px">
+                     <option value="1">是</option>
+                     <option value="0">否</option>
+                        </select>
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单图标：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info7" class="easyui-textbox" style="width:200px"/>
+                </td>
+            </tr>
+
+               <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单描述：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info8" class="easyui-textbox" style="width:200px"/>
+                </td>
+            </tr>
+
+            <!--   <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单备注：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info9" class="easyui-textbox" style="width:200px"/>
+                </td>
+            </tr-->
+
+        </table>
+    </div>
+
+    <div id="dlg_task_add_btn" style="display: none;">
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="task_add()">确定</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg_task_add').dialog('close')">取消</a>
+    </div>
+
+    <div id="dlg_task_edit" style="display: none; overflow: hidden; padding: 10px 0px 0px 20px;">
+         <table>
+            <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单名称：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                    <input  id ="info12"  class="easyui-textbox"  style="width:200px"/>
+                </td>
+            </tr>
+
+                <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单跳转：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info32" class="easyui-textbox"  style="width:200px"/>
+                </td>
+            </tr>
+
+             <tr>
+             <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;">是否显示：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <select id="info42" class="easyui-combobox" style="width:203px">
+                     <option value="1">是</option>
+                     <option value="0">否</option>
+                        </select>
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单图标：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info72" class="easyui-textbox" style="width:200px"/>
+                </td>
+            </tr>
+
+               <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单描述：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info82" class="easyui-textbox" style="width:200px"/>
+                </td>
+            </tr>
+            <!--
+               <tr>
+                <td style="padding: 4px 2px 4px 10px;">
+                    <span style="padding-left: 18px;"> 菜单备注：</span>
+                </td>
+                <td style="padding: 4px 2px 4px 2px;">
+                   <input id="info92" class="easyui-textbox" style="width:200px"/>
+                </td>
+            </tr-->
+
+        </table>
+    </div>
+
+       <div id="dlg_task_edit_btn" style="display: none;">
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-ok'" onclick="task_edit()">确定</a>
+        <a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-cancel'" onclick="javascript:$('#dlg_task_edit').dialog('close')">取消</a>
+        </div>
+    <div id="dlg_warn" style="display: none">
+    </div>
+    </div>
+
+</body>
+</html>
+

@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+     <link rel="stylesheet" href="/static/Themes/EasyUI/default/easyui.css" />
+    <link rel="stylesheet" href="/static/Themes/EasyUI/icon.css" />
+    <script src="/static/Themes/EasyUI/jquery.min.js"></script>
+    <script src="/static/Themes/EasyUI/jquery.easyui.min.js"></script>
+    <script src="/static/Themes/Scripts/FunctionJS.js"></script>
+
+
+    <script>
+        $(document).ready(function () {
+            LoadData();
+        })
+
+
+        function LoadData() {
+            var dataJson2;
+            var parm = "action=LoadData";
+            getAjax("/role/", parm, function (data) {
+                dataJson2 = jQuery.parseJSON(data);
+            })
+
+            $("#tg").datagrid({
+                data: dataJson2,
+                idField: 'id',
+                treeField: 'name',
+                columns: [[
+                    { title: "选择框", field: "ck", checkbox: true, width: "10%" },
+                    { title: "角色名", field: "name", width: "20%" },
+                  //  { title: "字典名称", field: "d_name", width: "10%" },
+                    { title: "描述", field: "d_describe", width: "20%" },
+                 //   { title: "所属模块", field: "module_name", width: "10%" },
+                 //    { title: "所属权限", field: "module_name", width: "10%" },
+                //    { title: "创建时间", field: "create_time", width: "20%" },
+                //    { title: "创建人", field: "create_uname", width: "10%" },
+                //    { title: "更新时间", field: "update_time", width: "20%" },
+                //    { title: "更新人", field: "update_uname", width: "10%" }
+                ]],
+                rownumbers: true,
+                singleSelect: true,
+                checkOnSelect: true,
+               // toolbar: '#tb',
+            })
+        }
+
+
+
+        function dialog_add() {
+
+            $('#dd').show();
+            $('#dd').dialog({
+                title: '添加角色',
+                width: 400,
+                height: 200,
+                closed: false,
+                cache: false,
+                modal: true,
+                onResize: function () {
+                        $(this).dialog('center')
+                    },
+                buttons: [{
+                    text: '提交',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        var role_name = $('#info1_txt').val();
+                        var role_describe = $('#info2_txt').val();
+                        if (role_name =="")
+                        {
+                            alert("请填写角色名称！")
+
+                        }
+                        else
+                        {
+                            var dataJson3;
+                            var parm = "action=addRole&role_name=" + role_name + "&role_describe=" + role_describe;
+                            getAjax("/role/", parm, function (data) {
+                                dataJson3 = eval("(" + data + ")");
+                            })
+                            if (dataJson3 != "0")
+                            {
+                                $('#dd').dialog('close');
+                                LoadData();
+
+                            }
+
+
+                        }
+                    }
+                }, {
+                    text: '取消',
+                    iconCls: 'icon-cancel',
+                    handler: function() {
+                        $('#dd').dialog('close');
+                    }
+                }]
+
+
+            });
+
+         //   var top = $("#tg").offset().top + 100;
+         //   var left = $("#tg").offset().left + 150;
+
+        //    $('#dd').window('open').window('resize', { top: top, left: left });
+        }
+
+        function dialog_edit()
+        {
+
+            var row = $('#tg').datagrid('getSelected');
+            if (row) {
+                //var d_id = row.d_id;
+                var role_id = row.role_id;
+
+
+                $('#dd').show().dialog({
+                    title: '编辑角色',
+                    width: 400,
+                    height: 150,
+                    closed: false,
+                    cache: false,
+
+                    modal: true,
+                    onOpen: function () {
+                        var body = $(this).panel('body');
+                        body.find('#info1_txt').textbox({ value: row.name });
+                        body.find('#info2_txt').textbox({ value: row.d_describe });
+
+                    },
+
+                    buttons: [{
+                        text: '提交',
+                        iconCls: 'icon-ok',
+                        handler: function () {
+                            var role_name = $('#info1_txt').val();
+                            var role_describe = $('#info2_txt').val();
+
+                            if (role_name =="") {
+                                alert("请填写角色名称！");
+
+                            }
+                            else {
+                                var dataJson4;
+                                var parm = "action=editRole&role_name=" + role_name + "&role_describe=" + role_describe+"&role_id="+role_id;
+                                getAjax("/role/", parm, function (data) {
+                                    dataJson4 = eval("(" + data + ")");
+                                })
+                                if (dataJson4 != "0") {
+                                    $('#dd').dialog('close');
+                                    LoadData();
+                                }
+                            }
+                        }
+                    }, {
+                        text: '取消',
+                        iconCls: 'icon-cancel',
+                        handler: function () {
+                            $('#dd').dialog('close');
+                        }
+                    }]
+                });
+                var top = $("#tg").offset().top + 100;
+                var left = $("#tg").offset().left + 150;
+
+                $('#dd').window('open').window('resize', { top: top, left: left });
+            }
+            else
+            {
+                alert("请选中某一行！");
+            }
+        }
+
+        function dialog_delete() {
+
+            var row = $('#tg').datagrid('getSelected');
+            if (row)
+            {
+                var d_id = row.d_id;
+                var role_id = row.other_id;
+                var dataJson5;
+                var parm = "action=deleteRole&d_id=" + d_id + "&role_id=" + role_id;
+                getAjax("indexdata.ashx", parm, function (data) {
+                    dataJson5 = eval("(" + data + ")");
+                })
+
+                if (dataJson5 == "0")
+                {
+                    alert("删除失败！");
+                }
+                LoadData();
+
+            }
+            else
+            {
+                alert("请选中某一行！");
+
+            }
+
+
+
+        }
+
+
+        function dialog_permis()
+        {
+            var parm = "action=LoadAccess";
+            var access_Json = [];
+            getAjax("/role/", parm, function (data) {
+                if (data != "") {
+                    access_Json = jQuery.parseJSON(data);
+                }
+            })
+         //   var access_Json = [{ "id": "1", "name": "浏览" }, { "id": "2", "name": "添加" }, { "id": "3", "name": "编辑" }, { "id": "4", "name": "删除" }, { "id": "5", "name": "查询" }, { "id": "6", "name": "打印" }, { "id": "7", "name": "预览" }, { "id": "8", "name": "导出" }];
+            var row = $('#tg').datagrid('getSelected');
+            if (row)
+            {
+                var dataJson6;
+                var role_id = row.role_id;
+                var role_name = row.name;
+                var role_title = "  "+role_name + "  :权限设置";
+
+                var parm = "action=getRolePermis&role_id=" + role_id;
+                getAjax("/role/", parm, function (data) {
+                    dataJson6 = jQuery.parseJSON(data);
+                });
+
+                var editRow = undefined;
+                $("#tg2").datagrid({
+                    data: dataJson6,
+                    idField: 'id',
+                    treeField: 'role_name',
+                    columns: [[
+                        //{ title: "选择框", field: "ck", checkbox: true, width: "10%" },
+                        //{ title: "角色名", field: "role_name", width: "20%" },
+                        { title: "对象名称", field: "menu_name", width: "20%" },
+                        //{ title: "对象权限", field: "access_string",width: "30%" },
+                        { title: "添加权限", field: "access_name", width: "50%", editor: { type: 'combobox', options: { multiple: 'true', valueField: 'name', textField: 'name', data: access_Json, panelHeight: 'auto', required: false } } }
+                    ]],
+                    width: 600,
+                    height: 400,
+                    rownumbers: true,
+                    singleSelect: true,
+                    checkOnSelect: true,
+                    onAfterEdit: function (rowIndex, rowData, changes) {
+                        editRow = undefined;
+                    },
+                    onDblClickRow: function (rowIndex, rowData) {
+                        if (editRow != undefined) {
+                            $("#tg2").datagrid('endEdit', editRow);
+                        }
+
+                        if (editRow == undefined) {
+                            $("#tg2").datagrid('beginEdit', rowIndex);
+                            editRow = rowIndex;
+                        }
+                    },
+                    onClickRow: function (rowIndex, rowData) {
+                        if (editRow != undefined) {
+                            $("#tg2").datagrid('endEdit', editRow);
+
+                        }
+
+                    }
+                })
+
+                $('#dd2').show().dialog({
+                    title: role_title,
+                    width: 620,
+                    height: 'auto',
+                    closed: false,
+                    cache: false,
+                    modal: true,
+                    buttons: [{
+                        text: '处理',
+                        iconCls: 'icon-ok',
+                        handler: function () {
+
+                            var dataJson7;
+                            var datarow = $("#tg2").datagrid("getRows"); //这段代码是获取当前页的所有行。
+                            var length = datarow.length;
+                            var datagrid = JSON.stringify(datarow);
+
+                            var parm = "action=EditRolePermis&datagrid=" + datagrid+"&role_id="+role_id;
+                            getAjax("/role/", parm, function (data) {
+                                dataJson7 = eval("(" + data + ")");
+                            });
+
+                            var dd = dataJson7;
+
+                            $('#dd2').dialog('close');
+
+
+                        }
+                    }, {
+                        text: '取消',
+                        iconCls: 'icon-cancel',
+                        handler: function () {
+
+                            $('#dd2').dialog('close');
+                        }
+                    },
+                    ]
+                });
+                var top = $("#tg").offset().top + 30;
+                var left = $("#tg").offset().left + 150;
+
+                $('#dd2').window('open').window('resize', { top: top, left: left });
+
+
+            }
+            else
+            {
+                alert("请选择一行记录！");
+
+            }
+
+
+        }
+
+        var d_id;
+        function dialog_RoleInfo() {
+
+            var row = $('#tg').datagrid('getSelected');
+            if (row) {
+                var dataJson7;
+                d_id = row.d_id;
+                var role_name = row.name;
+                var role_title = "  " + role_name + "  :附属信息";
+
+                var parm = "action=getRoleInfo&d_id=" + d_id;
+                getAjax("indexdata.ashx", parm, function (data) {
+                    dataJson7 = eval("(" + data + ")");
+                });
+
+                var editRow = undefined;
+                $("#tg3").datagrid({
+                    data: dataJson7,
+                    idField: 'id',
+                    treeField: 'role_name',
+                    columns: [[
+                        //{ title: "选择框", field: "ck", checkbox: true, width: "10%" },
+                        { title: "角色属性", field: "field_name", width: "20%" },
+                        { title: "角色属性描述", field: "field_describe", width: "20%" },
+                        { title: "属性类型", field: "field_default", width: "20%" },
+                        { title: "默认值", field: "field_type", width: "30%" }
+                        //{ title: "创建时间", field: "create_time", width: "20%" },
+                        //{ title: "创建用户", field: "create_uname", width: "20%" },
+                       //{ title: "更新时间", field: "update_time",width: "20%" },
+                       //{ title: "更新用户", field: "update_uname", width: "30%" }
+                    ]],
+                    width: 500,
+                    height: 200,
+                    rownumbers: true,
+                    singleSelect: true,
+                    checkOnSelect: true,
+                    toolbar: '#tb3',
+                })
+
+
+
+
+                $('#dd3').show().dialog({
+                    title: role_title,
+                    width: 520,
+                    height: 'auto',
+                    closed: false,
+                    cache: false,
+                    modal: true,
+
+                    buttons: [{
+                        text: '处理',
+                        iconCls: 'icon-ok',
+                        handler: function () {
+
+                        }
+                    }, {
+                        text: '取消',
+                        iconCls: 'icon-cancel',
+                        handler: function () {
+
+                            $('#dd3').dialog('close');
+                        }
+                    },
+                    ]
+                });
+                var top = $("#tg").offset().top + 30;
+                var left = $("#tg").offset().left + 150;
+
+                $('#dd3').window('open').window('resize', { top: top, left: left });
+
+
+            }
+            else {
+                alert("请选择一行记录！");
+
+            }
+        }
+
+        function RoleInfo_add() {
+
+            $('#dd4').show().dialog({
+                title: '添加附属信息',
+                width: 400,
+                height: 150,
+                closed: false,
+                cache: false,
+                //href: 'Tool/add_role.aspx',
+                modal: true,
+
+                buttons: [{
+                    text: '提交',
+                    iconCls: 'icon-ok',
+                    handler: function () {
+                        var test_d_id = d_id;
+                        var field_name = $('#roleinfo_text1').val();
+                        var field_describe = $('#roleinfo_text2').val();
+                        if (field_name == "") {
+                            alert("请填写属性名称！")
+
+                        }
+                        else {
+                            var dataJson3;
+                            var parm = "action=addRoleInfo&field_name=" + field_name + "&field_describe=" + field_describe+"&d_id="+d_id;
+                            getAjax("indexdata.ashx", parm, function (data) {
+                                dataJson3 = eval("(" + data + ")");
+                            })
+                            if (dataJson3==1) {
+                                $('#dd4').dialog('close');
+                                dialog_RoleInfo();
+
+                            }
+
+
+                        }
+                    }
+                }, {
+                    text: '取消',
+                    iconCls: 'icon-cancel',
+                    handler: function () {
+                        $('#dd4').dialog('close');
+                    }
+                }]
+
+
+            });
+
+            var top = $("#tg3").offset().top + 100;
+            var left = $("#tg3").offset().left + 200;
+
+            $('#dd4').window('open').window('resize', { top: top, left: left });
+        }
+
+
+        function RoleInfo_edit() {
+
+            var row = $('#tg3').datagrid('getSelected');
+            if (row) {
+                var field_name = row.field_name;
+                var field_describe = row.field_describe;
+                var field_id = row.field_id;
+
+                $('#dd4').show().dialog({
+                    title: '编辑角色',
+                    width: 400,
+                    height: 150,
+                    closed: false,
+                    cache: false,
+
+                    modal: true,
+                    onOpen: function () {
+                        var body = $(this).panel('body');
+                        body.find('#roleinfo_text1').textbox({ value: row.field_name });
+                        body.find('#roleinfo_text2').textbox({ value: row.field_describe });
+
+                    },
+
+                    buttons: [{
+                        text: '提交',
+                        iconCls: 'icon-ok',
+                        handler: function () {
+                            var name = $('#roleinfo_text1').val();
+                            var describe = $('#roleinfo_text2').val();
+
+                            if (name == "") {
+                                alert("请填写角色名称！");
+
+                            }
+                            else {
+                                var dataJson4;
+                                var parm = "action=editRoleInfo&field_name=" + name + "&field_describe=" + describe + "&d_id=" + d_id + "&field_id=" + field_id;
+                                getAjax("indexdata.ashx", parm, function (data) {
+                                    dataJson4 = eval("(" + data + ")");
+                                })
+                                if (dataJson4==1) {
+                                    $('#dd4').dialog('close');
+                                    dialog_RoleInfo();
+
+                                }
+
+
+                            }
+
+                        }
+                    }, {
+                        text: '取消',
+                        iconCls: 'icon-cancel',
+                        handler: function () {
+                            $('#dd4').dialog('close');
+                        }
+                    }]
+
+
+                });
+                var top = $("#tg").offset().top + 100;
+                var left = $("#tg").offset().left + 200;
+
+                $('#dd4').window('open').window('resize', { top: top, left: left });
+
+
+            }
+            else {
+                alert("请选中某一行！");
+
+            }
+
+
+
+        }
+
+
+        function RoleInfo_delete() {
+
+            var row = $('#tg3').datagrid('getSelected');
+            if (row) {
+
+                var field_id = row.field_id;
+                var dataJson5;
+                var parm = "action=deleteRoleInfo&d_id=" + d_id + "&field_id=" + field_id;
+                getAjax("indexdata.ashx", parm, function (data) {
+                    dataJson5 = eval("(" + data + ")");
+                })
+
+                if (dataJson5 == 1) {
+                    alert("删除成功！");
+                    dialog_RoleInfo();
+                }
+
+
+            }
+            else {
+                alert("请选中某一行！");
+
+            }
+
+
+
+        }
+
+
+        </script>
+        <style>
+        .tabs-panels
+        {
+            width: 100%;
+            height: 100%;
+        }
+        </style>
+
+</head>
+
+
+<body class="easyui-layout" style="width: 100%; height: 98%">
+
+    <div data-options="region:'center'"  style="">
+        <div id="tb" class="easyui-tabs" style="width: 100%; height: 100%;">
+            <div title="角色管理" closable="true">
+                 <table id="tg" class="easyui-datagrid" style="width: 99%; height: 99%"><a href="#" class="easyui-linkbutton" iconcls="icon-remove" onclick="dialog_delete();" plain="true">删除角色</a>
+                    <a class="easyui-linkbutton" iconcls="icon-add" onclick="dialog_add();" plain="true">增加角色</a>
+                    <a class="easyui-linkbutton" iconcls="icon-edit" onclick="dialog_edit();" plain="true">编辑角色</a>
+                    <a class="easyui-linkbutton" iconcls="icon-edit" onclick="dialog_permis();" plain="true">修改角色权限</a>
+                    <a class="easyui-linkbutton" iconcls="icon-edit" onclick="dialog_RoleInfo();" plain="true">编辑角色附属信息</a>
+                 </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="dd" style="display:none; overflow: hidden; padding: 10px;">
+        <table>
+            <tr>
+                <td>
+                    角色名称：
+                 </td>
+                <td>
+                    <input id="info1_txt" class="easyui-textbox" type="text" style="width:200px"/>
+                 </td>
+           </tr>
+            <tr>
+                <td>
+                    角色描述：
+                 </td>
+                <td>
+                <input id="info2_txt" class="easyui-textbox"  type="text" style="width:200px"/>
+                 </td>
+            </tr>
+            </table>
+    </div>
+
+     <div id="dd2" style="display:none">
+         <table id="tg2" class="easyui-datagrid">
+             </table>
+    </div>
+    <div id="dd3" style="display:none">
+         <table id="tg3" class="easyui-datagrid">
+             </table>
+      <div id="tb3" style="padding: 2px 5px;">
+        <a href="#" class="easyui-linkbutton" iconcls="icon-remove" onclick="RoleInfo_delete();" plain="true">删除附属信息</a>
+        <a href="#" class="easyui-linkbutton" iconcls="icon-add" onclick="RoleInfo_add();" plain="true">增加附属信息</a>
+        <a href="#" class="easyui-linkbutton" iconcls="icon-edit" onclick="RoleInfo_edit();" plain="true">编辑附属信息</a>
+      </div>
+    </div>
+
+    <div id="dd4" style="display:none">
+        <table>
+            <tr>
+                <td>
+                    属性名称：
+                 </td>
+                <td>
+                    <input id="roleinfo_text1" class="easyui-textbox" type="text" style="width:200px"/>
+                 </td>
+           </tr>
+            <tr>
+                <td>
+                    属性描述：
+                 </td>
+                <td>
+                <input id="roleinfo_text2" class="easyui-textbox"  type="text" style="width:200px"/>
+                 </td>
+            </tr>
+            </table>
+    </div>
+
+</body>
+</html>

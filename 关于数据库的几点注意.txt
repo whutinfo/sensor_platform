@@ -1,0 +1,9 @@
+1、不要直接对数据库进行删除删表操作，通过Models操作
+2、如多人做同一模块，可以先统一商量下表结构，创一张表，执行一次操作。
+	再所有人对该类下的    class Meta:
+   			   managed = False  #绑定该属性，不对数据库中的该表进行操作
+        			   db_table = 'VideoMeau_Table'
+	在自己电脑中执行那两次指令
+
+3、最后的办法：删掉Models这个app下的migrations的所有记录，只留下__init__ . py，并在数据库中找到django_migrations这张表，删除掉所有app是Models的数据，将所有模型的 class Meta:都绑定 managed = False （仅对数据库中有该表的时候绑定，数据库中还没有的注释掉该属性，不然不会生成）。重新进行makemigrations  生成迁移记录，并migrate   
+这样不会对原有表有任何影响，因为大多数迁移出问题都是由迁移记录的存在导致，多方合作迁移记录不同步

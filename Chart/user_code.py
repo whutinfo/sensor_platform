@@ -25,6 +25,33 @@ def fun_user_get_data(start_time,end_time,show_type=''):
 
 	return x_list,y_list
 
+def fun_user_get_realData(cur_time,show_num=10,show_type = ''):
+	"""
+		用户自己编写的获取x,y实时数据的函数
+		:param cur_time: 实时数据的起始时间
+		:param show_num: 图上需要显示的点的个数，默认10个
+		:param show_type: 搜索条件：选择展示的数字是哪个
+		:return: x列表,y列表
+		"""
+	temp = models.Temperature.objects.filter(time__gte=cur_time).order_by('time')
+	x_list = []
+	y_list = []
+
+	for row in temp:
+		# 时间从datetime格式转字符串，才能json序列化
+		x_list.append(row.time.strftime("%Y-%m-%d %H:%M:%S"))
+		if int(show_type) == 1:
+			y_list.append(row.temperate)
+		elif int(show_type) == 2:
+			y_list.append(row.humidity)
+		elif int(show_type) == 3:
+			y_list.append(row.rainfall)
+
+	if len(x_list)>show_num:
+		x_list = x_list[-show_num:]
+		y_list = y_list[-show_num:]
+
+	return x_list, y_list
 
 def fun_user_get_pie_data():
 	"""

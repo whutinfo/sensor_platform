@@ -2,7 +2,6 @@
 from Models import models
 from Base.com_func import *
 
-
 def fun_user_get_data(start_time,end_time,show_type=''):
 	"""
 	用户自己编写的获取x,y数据的函数
@@ -11,7 +10,6 @@ def fun_user_get_data(start_time,end_time,show_type=''):
 	:param show_type: 搜索条件：选择展示的数字是哪个
 	:return: x列表,y列表
 	"""
-
 	temp = models.Sensor_data.objects.filter(create_time__range=(start_time, end_time)).order_by('create_time')
 
 	x_list = []
@@ -69,6 +67,96 @@ def fun_user_get_data(start_time,end_time,show_type=''):
 			y_list.append(row.type_24)
 		elif int(show_type) == 25:
 			y_list.append(row.type_25)
+	return x_list,y_list
+
+
+
+def fun_user_get_realData(cur_time,show_num=10,show_type = ''):
+	"""
+		用户自己编写的获取x,y实时数据的函数
+		:param cur_time: 实时数据的起始时间
+		:param show_num: 图上需要显示的点的个数，默认10个
+		:param show_type: 搜索条件：选择展示的数字是哪个
+		:return: x列表,y列表
+		"""
+
+	temp = models.Sensor_data.objects.filter(create_time__gte=cur_time).order_by('create_time')
+	x_list = []
+	y_list = []
+
+	for row in temp:
+
+		x_list.append(row.create_time.strftime("%Y-%m-%d %H:%M:%S"))
+		if int(show_type) == 1:
+			y_list.append(row.type_1)
+		elif int(show_type) == 2:
+			y_list.append(row.type_2)
+		elif int(show_type) == 3:
+			y_list.append(row.type_3)
+		elif int(show_type) == 4:
+			y_list.append(row.type_4)
+		elif int(show_type) == 5:
+			y_list.append(row.type_5)
+		elif int(show_type) == 6:
+			y_list.append(row.type_6)
+		elif int(show_type) == 7:
+			y_list.append(row.type_7)
+		elif int(show_type) == 8:
+			y_list.append(row.type_8)
+		elif int(show_type) == 9:
+			y_list.append(row.type_9)
+		elif int(show_type) == 10:
+			y_list.append(row.type_10)
+		elif int(show_type) == 11:
+			y_list.append(row.type_11)
+		elif int(show_type) == 12:
+			y_list.append(row.type_12)
+		elif int(show_type) == 13:
+			y_list.append(row.type_13)
+		elif int(show_type) == 14:
+			y_list.append(row.type_14)
+		elif int(show_type) == 15:
+			y_list.append(row.type_15)
+		elif int(show_type) == 16:
+			y_list.append(row.type_16)
+		elif int(show_type) == 17:
+			y_list.append(row.type_17)
+		elif int(show_type) == 18:
+			y_list.append(row.type_18)
+		elif int(show_type) == 19:
+			y_list.append(row.type_19)
+		elif int(show_type) == 20:
+			y_list.append(row.type_20)
+		elif int(show_type) == 21:
+			y_list.append(row.type_21)
+		elif int(show_type) == 22:
+			y_list.append(row.type_22)
+		elif int(show_type) == 23:
+			y_list.append(row.type_23)
+		elif int(show_type) == 24:
+			y_list.append(row.type_24)
+		elif int(show_type) == 25:
+			y_list.append(row.type_25)
+
+	if len(x_list)>show_num:
+		x_list = x_list[-show_num:]
+		y_list = y_list[-show_num:]
+
+	return x_list, y_list
+
+def fun_user_get_pie_data():
+	"""
+	用户自己编写的获取x,y数据的函数
+	:param start_time: 搜索条件：开始时间
+	:param end_time: 搜索条件：结束时间
+	:return: x列表,y列表
+	"""
+	# 数据项的名称
+	x_list = ['视频广告','联盟广告','邮件营销','直接访问','搜索引擎']
+
+	# 数据项的值
+	y_list = [235,274,225,465,356]
+
 	return x_list,y_list
 
 
@@ -131,6 +219,4 @@ def fun_user_create_a_chart(chart_type,title='',x_data=[],y_data=[],y_tick_name=
 	option.append({'option': datajson})
 
 	return option
-
-
 

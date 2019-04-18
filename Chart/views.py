@@ -4,6 +4,8 @@ from Models import models
 from Base.com_func import *
 from Chart.user_code import *
 import json
+import time
+import random
 
 """
 图表的模板
@@ -83,7 +85,6 @@ def show_line_or_bar(request):
 			if error_flag != 1:
 
 				"""user code begin   """
-
 				# 创建气温的一个图
 				#   chart_type  1为折线，2为柱状，3为饼图
 				option=fun_user_create_a_chart(chart_type, title=title, x_data=x_list, y_data=y_list,
@@ -93,8 +94,76 @@ def show_line_or_bar(request):
 			else:
 				#'结束时间选的开始时间早，请重新选择！'
 				option = ''
+			return HttpResponse(json.dumps(option))
+
+		elif action == 'realData_option':
+
+			"""sys variable begin"""
+
+			x_list = []
+			y_list = []
+			option = ""
+
+			"""sys variable end"""
+
+			chart_type = request.POST.get('chart_type')
+			show_data_type = request.POST.get('show_type')
+			show_data_name = request.POST.get('show_name')
+			cur_time = request.POST.get('cur_time')
+			"""user varible begin"""
+
+			# 图的标题
+			title = show_data_name
+
+			# 折线含义，即图例内容，要画几条就列几个
+			#  如 legend_name = '气温'
+			legend_name = show_data_name
+
+			# y的单位
+			if int(show_data_type) == 1:
+				y_tick_name = '℃'
+			elif int(show_data_type) == 2:
+				y_tick_name = '%'
+			elif int(show_data_type) == 3:
+				y_tick_name = '%'
+
+			"""user varible end"""
+
+			# 获取x,y列表，按x,y的顺序接收！
+			x_list,y_list = fun_user_get_realData(cur_time,show_type = show_data_type)
+
+			"""user code begin   """
+			# 创建气温的一个图
+			#   chart_type  1为折线，2为柱状，3为饼图
+			option=fun_user_create_a_chart(chart_type, title=title, x_data=x_list, y_data=y_list,
+				                        y_tick_name=y_tick_name, legend_name=legend_name)
+			"""user code end   """
+
 			print(option)
 			return HttpResponse(json.dumps(option))
+
+		elif action == 'update_realData':
+
+			"""sys variable begin"""
+
+			x_data = []
+			y_data = []
+			value_list = []
+			value_dict = {'x_data':'',
+			              'y_data':''}
+
+			"""sys variable end"""
+			show_data_type = request.POST.get('show_type')
+			cur_time =  request.POST.get('cur_time')
+
+			# 获取x,y实时数据的列表，按x,y的顺序接收！
+			x_data,y_data = fun_user_get_realData(cur_time,show_num=5,show_type = show_data_type)
+
+			value_dict['x_data'] = x_data
+			value_dict['y_data'] = y_data
+			value_list.append(value_dict)
+			return HttpResponse(json.dumps(value_list))
+
 
 
 

@@ -12,6 +12,72 @@
     <script src={% static "echarts.js"%}></script>
 
      <script type="text/javascript">
+         //获取当前时间的函数
+         function getNowFormatDate() {
+            var date = new Date();
+            var seperator1 = "-";
+            var seperator2 = ":";
+            var month = date.getMonth() + 1;
+            var strDate = date.getDate();
+            if (month >= 1 && month <= 9) {
+                month = "0" + month;
+            }
+            if (strDate >= 0 && strDate <= 9) {
+                strDate = "0" + strDate;
+            }
+            var currentdate = date.getFullYear() + seperator1 + month + seperator1 + strDate
+                    + " " + date.getHours() + seperator2 + date.getMinutes()
+                    + seperator2 + date.getSeconds();
+            return currentdate;
+         }
+
+         function real_data() {
+            console.log(echarts.version);
+             var myChart = echarts.init(document.getElementById('container1'));
+
+             var chart_type = $(combo1).combobox('getValue'); // 1是折线图，2是柱状图
+             var show_type = $(combo2).combobox('getValue'); // 展示哪个数据  1、温度  2、湿度  3、雨量
+             var show_name = $(combo2).combobox('getText'); // 展示哪个数据  1、温度  2、湿度  3、雨量
+             var cur_time = getNowFormatDate();
+
+             var option='';
+
+             parm = 'action=realData_option&chart_type=' + chart_type+ '&show_type=' + show_type+ '&show_name=' + show_name+'&cur_time=' + cur_time;
+
+             //getAjax 第一个参数是Url 做相应的 更改
+             getAjax("/line_or_bar/", parm, function (data) {
+
+                 option_json = jQuery.parseJSON(data);
+
+                 if (option_json != '') {
+                     option = option_json[0].option;
+                     myChart.setOption(option);
+                 }
+             });
+
+             // ECharts 会合并新的参数和数据，然后刷新图表。
+            setInterval(function () {
+
+                parm = 'action=update_realData&chart_type=' + chart_type+ '&show_type=' + show_type+ '&show_name=' + show_name+'&cur_time=' + cur_time;
+
+                 //getAjax 第一个参数是Url 做相应的 更改
+                getAjax("/line_or_bar/", parm, function (data1) {
+                     update_data = jQuery.parseJSON(data1);
+
+                     if (update_data != '') {
+                          myChart.setOption({
+                              xAxis: {
+                                data: update_data[0].x_data
+                              },
+                              series: [{
+                                data: update_data[0].y_data
+                              }]
+                        });
+                     }
+                });
+            }, 500);
+         }
+
 
          function  showData() {
              var start_time =$( first_time).datetimebox('getValue');
@@ -43,6 +109,7 @@
              }
 
          }
+
 
          function  Show_Chart(option) {
 
@@ -102,9 +169,9 @@
                     </td>
                     <td style="padding-top: 4px;">
                         <select class="easyui-combobox" id="combo2" data-options=" valueField: 'id',textField: 'text',panelHeight:'auto'" style="width: 90px;" >
-                            <option value=1>type_1</option>
-                            <option value=2>type_2</option>
-                            <option value=3>type_3</option>
+                            <option value=1>温度</option>
+                            <option value=2>湿度</option>
+                            <option value=3>雨量</option>
 
 
                         </select>
@@ -127,7 +194,7 @@
                         <span></span>
                     </td>
                     <td style="padding: 6px 6px 0px 3px;">
-                       <a id="btn-search" style="width: 150px" class="easyui-linkbutton"  onclick="showData();">点击查找</a>
+                       <a id="btn-search" style="width: 150px" class="easyui-linkbutton"  onclick="real_data();">点击查找</a>
                     </td>
                 </tr>
             </table>

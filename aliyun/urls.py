@@ -181,5 +181,6 @@ urlpatterns = [
 
 #传感器数据
     path('sensor/', sensor.historydata),
+    path('currentdata/', sensor.currentdata),
 
 ]
